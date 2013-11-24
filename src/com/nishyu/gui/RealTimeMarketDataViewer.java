@@ -39,13 +39,16 @@ public class RealTimeMarketDataViewer extends Application {
  
         tableView.setItems(data);
         tableView.getColumns().addAll(nameColumn, priceColumn, volumeColumn);
-        tableView.itemsProperty().bind(realtimeMarketDataService.valueProperty());
         
         root.getChildren().add(tableView);
 
         realtimeMarketDataService.setOnSucceeded( new EventHandler<WorkerStateEvent>(){
         	@Override
         	public void handle(WorkerStateEvent t){
+        		//You need to do this instead of tableView.itemsProperty().bind(realtimeMarketDataService.valueProperty()) 
+        		//The reason is that it seems JavaFX's Service will flush its valueProperty when calling restart()
+        		//So, if you simply bind Service's valueProperty to Table's itemProperty, the table will flush the contents too to show anything
+        		tableView.setItems(realtimeMarketDataService.getValue());		    
         		realtimeMarketDataService.restart();
         	}
         });
