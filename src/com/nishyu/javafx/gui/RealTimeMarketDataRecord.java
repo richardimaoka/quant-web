@@ -1,4 +1,4 @@
-package com.nishyu.gui;
+package com.nishyu.javafx.gui;
 
 public class RealTimeMarketDataRecord {
 	private String _name;

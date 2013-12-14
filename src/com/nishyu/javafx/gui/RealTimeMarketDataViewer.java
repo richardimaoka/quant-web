@@ -1,4 +1,4 @@
-package com.nishyu.gui;
+package com.nishyu.javafx.gui;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;

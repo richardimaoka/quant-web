@@ -1,4 +1,4 @@
-package com.nishyu.gui;
+package com.nishyu.javafx.gui;
 
 import java.util.Random;
 
