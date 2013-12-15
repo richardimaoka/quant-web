@@ -1,7 +1,19 @@
 package com.nishyu.javafx.gui;
 
-import com.nishyu.javafx.common.RealTimeMarketDataRecord;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.commons.lang3.SerializationUtils;
+
+import com.nishyu.javafx.common.RealTimeMarketDataRecord;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.AMQP.BasicProperties;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,13 +29,12 @@ import javafx.stage.Stage;
 
 public class RealTimeMarketDataViewer extends Application {
 	
-	private RealTimeMarketDataService realtimeMarketDataService = new RealTimeMarketDataService();
+    private static final String EXCHANGE_NAME = "market_data";
+
+	private Map<String, RealTimeMarketDataRecord> tableData = new HashMap<String, RealTimeMarketDataRecord>();
 	
-    final ObservableList<RealTimeMarketDataRecord> data = FXCollections.observableArrayList();
-    
-    private void init(Stage primaryStage) {
-        Group root = new Group();
-        primaryStage.setScene(new Scene(root));     
+    private TableView<RealTimeMarketDataRecord> initializeTable(){
+        TableView<RealTimeMarketDataRecord> tableView = new TableView<RealTimeMarketDataRecord>();
         
         TableColumn<RealTimeMarketDataRecord, String> nameColumn = new TableColumn<RealTimeMarketDataRecord, String>();
         nameColumn.setText("Name");
@@ -36,26 +47,41 @@ public class RealTimeMarketDataViewer extends Application {
         TableColumn<RealTimeMarketDataRecord, Double> volumeColumn = new TableColumn<RealTimeMarketDataRecord, Double>();
         volumeColumn.setText("Volume");
         volumeColumn.setCellValueFactory(new PropertyValueFactory<RealTimeMarketDataRecord, Double>("volume"));
-
-        final TableView<RealTimeMarketDataRecord> tableView = new TableView<RealTimeMarketDataRecord>();
- 
-        tableView.setItems(data);
+    	
         tableView.getColumns().addAll(nameColumn, priceColumn, volumeColumn);
-        
+
+        return tableView;
+    }
+    
+    private void init(Stage primaryStage) throws java.io.IOException {
+        Group root = new Group();
+        primaryStage.setScene(new Scene(root));          
+
+        final TableView<RealTimeMarketDataRecord> tableView = initializeTable();
+  
         root.getChildren().add(tableView);
 
-        realtimeMarketDataService.setOnSucceeded( new EventHandler<WorkerStateEvent>(){
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        Connection connection = factory.newConnection();
+        Channel channel = connection.createChannel();
+
+        channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
+        String queueName = channel.queueDeclare().getQueue();
+        channel.queueBind(queueName, EXCHANGE_NAME, "");
+
+        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
         	@Override
-        	public void handle(WorkerStateEvent t){
-        		//You need to do this instead of tableView.itemsProperty().bind(realtimeMarketDataService.valueProperty()) 
-        		//The reason is that it seems JavaFX's Service will flush its valueProperty when calling restart()
-        		//So, if you simply bind Service's valueProperty to Table's itemProperty, the table will flush the contents too to show anything
-        		tableView.setItems(realtimeMarketDataService.getValue());		    
-        		realtimeMarketDataService.restart();
+        	public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
+        		RealTimeMarketDataRecord record = (RealTimeMarketDataRecord) SerializationUtils.deserialize(body); 
+        		System.out.println("Received: " + record);
+
+        		tableData.put(record.getName(), record);
+        		ObservableList<RealTimeMarketDataRecord> list = FXCollections.observableArrayList( tableData.values() );
+        		tableView.setItems(list);
         	}
         });
-        
-        realtimeMarketDataService.start();
+
     }
 
     @Override public void start(Stage primaryStage) throws Exception {
