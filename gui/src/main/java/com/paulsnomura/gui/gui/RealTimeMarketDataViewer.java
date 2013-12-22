@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 
 import org.apache.commons.lang3.SerializationUtils;
 
-import com.paulsnomura.gui.common.RealTimeMarketDataRecord;
+import com.paulsnomura.mdserver.RealTimeMarketDataRecord;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
