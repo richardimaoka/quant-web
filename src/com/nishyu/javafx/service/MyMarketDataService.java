@@ -34,7 +34,7 @@ public class MyMarketDataService {
 					record.setPrice( rnd.nextDouble() );
 					record.setVolume( rnd.nextDouble() );
 					channel.basicPublish(EXCHANGE_NAME, "", null, record.getBytes());
-					System.out.println(" [x] Sent '" + record + "'");
+					System.out.println(" [x] Sent '" + record + "'" +  " on Thread " + Thread.currentThread().getName());
 				}				
 				Thread.sleep(1000);
 			}
