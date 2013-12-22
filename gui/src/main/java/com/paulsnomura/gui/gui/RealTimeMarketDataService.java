@@ -1,8 +1,8 @@
-package com.nishyu.javafx.gui;
+package com.paulsnomura.gui.gui;
 
 import java.util.Random;
 
-import com.nishyu.javafx.common.RealTimeMarketDataRecord;
+import com.paulsnomura.gui.common.RealTimeMarketDataRecord;
 
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.ReadOnlyListProperty;

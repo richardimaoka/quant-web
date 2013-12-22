@@ -1,30 +1,28 @@
-package com.nishyu.javafx.gui;
+package com.paulsnomura.gui.gui;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.SerializationUtils;
-
-import com.nishyu.javafx.common.RealTimeMarketDataRecord;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.AMQP.BasicProperties;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+
+import org.apache.commons.lang3.SerializationUtils;
+
+import com.paulsnomura.gui.common.RealTimeMarketDataRecord;
+import com.rabbitmq.client.AMQP.BasicProperties;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 
 
 public class RealTimeMarketDataViewer extends Application {
@@ -74,13 +72,15 @@ public class RealTimeMarketDataViewer extends Application {
         	@Override
         	public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
         		RealTimeMarketDataRecord record = (RealTimeMarketDataRecord) SerializationUtils.deserialize(body); 
-        		System.out.println("Received: " + record);
+        		System.out.println("Received: " + record + " on Thread: " + Thread.currentThread().toString() + "(" + Thread.currentThread().getId() + ")" );
 
         		tableData.put(record.getName(), record);
         		ObservableList<RealTimeMarketDataRecord> list = FXCollections.observableArrayList( tableData.values() );
         		tableView.setItems(list);
         	}
         });
+              
+		System.out.println("Initializad on Thread: " + Thread.currentThread().toString() + "(" + Thread.currentThread().getId() + ")" );
 
     }
 

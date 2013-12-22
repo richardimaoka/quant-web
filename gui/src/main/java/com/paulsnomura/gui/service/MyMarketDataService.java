@@ -1,13 +1,13 @@
-package com.nishyu.javafx.service;
+package com.paulsnomura.gui.service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Connection;
+import com.paulsnomura.gui.common.RealTimeMarketDataRecord;
 import com.rabbitmq.client.Channel;
-import com.nishyu.javafx.common.RealTimeMarketDataRecord;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 
 public class MyMarketDataService {
 	private static final String EXCHANGE_NAME = "market_data";

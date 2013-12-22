@@ -1,4 +1,4 @@
-package com.nishyu.javafx.common;
+package com.paulsnomura.gui.common;
 
 import java.io.Serializable;
 import org.apache.commons.lang3.SerializationUtils;
