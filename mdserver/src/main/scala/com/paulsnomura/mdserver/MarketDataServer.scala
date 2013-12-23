@@ -4,6 +4,9 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.Connection
 import com.rabbitmq.client.Channel;
 import scala.util.Random
+import akka.actor.Actor 
+
+import com.paulsnomura.mdserver.table.TableDataRow
 
 object MarketDataServer {
     
@@ -21,12 +24,13 @@ object MarketDataServer {
 		val channel = connection.createChannel();
 		channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
 
+		
 		try {
 			while(true){
 			    stockNames.foreach( stockName => {
-			    	val stockRecord = new RealTimeMarketDataRecord( stockName, rnd.nextDouble, rnd.nextDouble )
-			    	println(" [x] Sent ' " + stockRecord.toString )
-					channel.basicPublish(EXCHANGE_NAME, "", null, stockRecord.getBytes )
+			    	val row = new TableDataRow( Map( "Name" ->  stockName, "Price" -> rnd.nextDouble, "Volume" -> rnd.nextDouble ) )
+			    	println(" [x] Sent ' " + row.toString )
+			    	channel.basicPublish(EXCHANGE_NAME, "", null, row.getBytes )					
 			    })
 			    
 				Thread.sleep(1000)

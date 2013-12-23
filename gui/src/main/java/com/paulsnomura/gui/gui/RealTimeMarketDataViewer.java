@@ -5,18 +5,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javafx.application.Application;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import org.apache.commons.lang3.SerializationUtils;
 
-import com.paulsnomura.mdserver.RealTimeMarketDataRecord;
+import com.paulsnomura.mdserver.table.TableDataRow;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -29,25 +32,25 @@ public class RealTimeMarketDataViewer extends Application {
 	
     private static final String EXCHANGE_NAME = "market_data";
 
-	private Map<String, RealTimeMarketDataRecord> tableData = new HashMap<String, RealTimeMarketDataRecord>();
+	private Map<String, TableDataRow> tableData = new HashMap<String, TableDataRow>();
+
+	void setColumn(TableView<TableDataRow> tableView, final String columnName) {
+	    TableColumn<TableDataRow, Object> column = new TableColumn<TableDataRow, Object>();
+	    column.setText(columnName);
+	    column.setCellValueFactory(new Callback<CellDataFeatures<TableDataRow, Object>, ObservableValue<Object>>(){
+	    	@Override
+	    	public ObservableValue<Object> call(CellDataFeatures<TableDataRow, Object> row){
+	    		return new ReadOnlyObjectWrapper<Object>( row.getValue().getValue(columnName) );
+	    	}        	
+	    });
+	    tableView.getColumns().add(column);
+	}
 	
-    private TableView<RealTimeMarketDataRecord> initializeTable(){
-        TableView<RealTimeMarketDataRecord> tableView = new TableView<RealTimeMarketDataRecord>();
-        
-        TableColumn<RealTimeMarketDataRecord, String> nameColumn = new TableColumn<RealTimeMarketDataRecord, String>();
-        nameColumn.setText("Name");
-        nameColumn.setCellValueFactory(new PropertyValueFactory<RealTimeMarketDataRecord, String>("name"));
-        
-        TableColumn<RealTimeMarketDataRecord, Double> priceColumn = new TableColumn<RealTimeMarketDataRecord, Double>();
-        priceColumn.setText("Price");
-        priceColumn.setCellValueFactory(new PropertyValueFactory<RealTimeMarketDataRecord, Double>("price"));
-
-        TableColumn<RealTimeMarketDataRecord, Double> volumeColumn = new TableColumn<RealTimeMarketDataRecord, Double>();
-        volumeColumn.setText("Volume");
-        volumeColumn.setCellValueFactory(new PropertyValueFactory<RealTimeMarketDataRecord, Double>("volume"));
-    	
-        tableView.getColumns().addAll(nameColumn, priceColumn, volumeColumn);
-
+    private TableView<TableDataRow> initializeTable(){
+        TableView<TableDataRow> tableView = new TableView<TableDataRow>();
+        setColumn(tableView, "Name");
+        setColumn(tableView, "Price");
+        setColumn(tableView, "Volume");
         return tableView;
     }
     
@@ -55,7 +58,7 @@ public class RealTimeMarketDataViewer extends Application {
         Group root = new Group();
         primaryStage.setScene(new Scene(root));          
 
-        final TableView<RealTimeMarketDataRecord> tableView = initializeTable();
+        final TableView<TableDataRow> tableView = initializeTable();
   
         root.getChildren().add(tableView);
 
@@ -67,15 +70,15 @@ public class RealTimeMarketDataViewer extends Application {
         channel.exchangeDeclare(EXCHANGE_NAME, "fanout");
         String queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, EXCHANGE_NAME, "");
-
+        
         channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
         	@Override
         	public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
-        		RealTimeMarketDataRecord record = (RealTimeMarketDataRecord) SerializationUtils.deserialize(body); 
+        		TableDataRow record = (TableDataRow) SerializationUtils.deserialize(body); 
         		System.out.println("Received: " + record + " on Thread: " + Thread.currentThread().toString() + "(" + Thread.currentThread().getId() + ")" );
 
-        		tableData.put(record.getName(), record);
-        		ObservableList<RealTimeMarketDataRecord> list = FXCollections.observableArrayList( tableData.values() );
+        		tableData.put(record.getValue("Name").toString(), record);
+        		ObservableList<TableDataRow> list = FXCollections.observableArrayList( tableData.values() );
         		tableView.setItems(list);
         	}
         });
@@ -90,4 +93,4 @@ public class RealTimeMarketDataViewer extends Application {
     }
 
     public static void main(String[] args) { launch(args); }
-}
+};
