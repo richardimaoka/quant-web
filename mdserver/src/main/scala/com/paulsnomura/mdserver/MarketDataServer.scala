@@ -2,11 +2,12 @@ package com.paulsnomura.mdserver
 
 import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.Connection
-import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Channel
 import scala.util.Random
-import akka.actor.Actor 
-
+import akka.actor.Actor
 import com.paulsnomura.mdserver.table.TableDataRow
+import com.paulsnomura.mdserver.table.TableDataSchema
+import com.paulsnomura.mdserver.table.TableDataColumn
 
 object MarketDataServer {
     
@@ -26,6 +27,11 @@ object MarketDataServer {
 
 		
 		try {
+		    val schema = new TableDataSchema( List( new TableDataColumn( "Name" ), new TableDataColumn( "Price" ), new TableDataColumn( "Volume" ) ) )
+		    
+	    	channel.basicPublish(EXCHANGE_NAME, "", null, schema.getBytes )
+	    	println(" [x] Sent ' " + schema.toString )
+	    	
 			while(true){
 			    stockNames.foreach( stockName => {
 			    	val row = new TableDataRow( Map( "Name" ->  stockName, "Price" -> rnd.nextDouble, "Volume" -> rnd.nextDouble ) )
