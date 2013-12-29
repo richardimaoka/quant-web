@@ -14,4 +14,6 @@ class TableDataSchema (columns : List[TableDataColumn]) extends java.io.Serializ
     } 
     
     override def hashCode = getColumns.hashCode		
+    
+    override def toString = "[TableDataScema]: " + columns
 }

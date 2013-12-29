@@ -20,6 +20,9 @@ import com.paulsnomura.mdserver.table.TableDataSchema;
 
 public class TableDataToJavaFXBridge {
 	
+	//Concurrent Hash Map? since processTableData can be called from arbitrary RabbitMQ Consumer callback thread
+	//Not actually, since "Requests into a Channel are serialized, with *ONLY ONE THREAD* running commands at a time" as in 
+	//http://www.rabbitmq.com/releases/rabbitmq-java-client/current-javadoc/com/rabbitmq/client/Channel.html
 	private Map<String, TableDataRow> tableData = new HashMap<String, TableDataRow>();
 
 	TableColumn<TableDataRow, Object> getColumn(TableView<TableDataRow> tableView, final String columnName) {
