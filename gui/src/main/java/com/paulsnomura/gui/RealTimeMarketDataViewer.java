@@ -23,13 +23,10 @@ public class RealTimeMarketDataViewer extends Application {
     private static final String EXCHANGE_NAME = "market_data";
 	    
     private void init(Stage primaryStage) throws java.io.IOException {
-        Group root = new Group();
-        primaryStage.setScene(new Scene(root));          
-
         final TableView<TableDataRow> tableView = new TableView<TableDataRow>();
         final TableDataToJavaFXBridge bridge = new TableDataToJavaFXBridge();
   
-        root.getChildren().add(tableView);
+        primaryStage.setScene(new Scene(tableView));          
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
