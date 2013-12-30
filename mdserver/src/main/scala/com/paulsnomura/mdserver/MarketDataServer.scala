@@ -11,6 +11,10 @@ import com.paulsnomura.mdserver.table.TableDataRow
 import com.paulsnomura.mdserver.table.TableDataSchema
 import com.paulsnomura.mdserver.table.TableDataColumn
 import scala.collection.immutable.Map
+import com.rabbitmq.client.DefaultConsumer
+import com.rabbitmq.client.Envelope
+import com.rabbitmq.client.AMQP.BasicProperties
+import org.apache.commons.lang3.SerializationUtils
 
 class MarketDataServer(connectionFactory: ConnectionFactory, exchangeName: String = "market_data")
 extends Actor {
@@ -23,10 +27,21 @@ extends Actor {
         channel = connection.createChannel()
 
         //create an exchange if it is not present in the RabbitMQ broker, and get it if it exists already?
-        channel.exchangeDeclare(exchangeName, "fanout");
+        channel.exchangeDeclare(exchangeName + ".client", "topic");
+        channel.exchangeDeclare(exchangeName + ".server", "direct" )
 
+        val queueName = channel.queueDeclare().getQueue();
+        channel.queueBind(queueName, exchangeName + ".server", "mdserver" )
+        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
+            override def handleDelivery(consumerTag : String, envelope : Envelope, properties : BasicProperties, body : Array[Byte]) = {
+                val data = new String( body )
+                self ! MarketDataServer.SendTableDataSchema( data )
+            }
+        })
+        
+        self ! MarketDataServer.SendTableDataSchema( MarketDataServer.topicNameForBroadCast )
         self ! MarketDataServer.GetAllRecordData 
-    }
+    } 
 
     override def postStop(): Unit = {
         channel.close()
@@ -37,9 +52,8 @@ extends Actor {
         case record: RealTimeMarketDataRecord => {
             val row = new TableDataRow(Map("Name" -> record.getName, "Price" -> record.getPrice, "Volume" -> record.getVolume))
             
-            //reconstruct schema?
-            
-            channel.basicPublish(exchangeName, "", null, row.getBytes)
+            //reconstruct schema?            
+            channel.basicPublish(exchangeName, MarketDataServer.topicNameForBroadCast, null, row.getBytes)
             println(" [x] Sent ' " + row.toString)
         }
         case MarketDataServer.GetAllRecordData => {
@@ -50,15 +64,17 @@ extends Actor {
             //convert keyedItems -> list ?
             println(" [x] Sending all the data to a single client (but not yet implemented now...)")        
         }
-        case MarketDataServer.SendTableDataSchema( a ) => {
+        case MarketDataServer.SendTableDataSchema( topicName ) => {
             val schema = new TableDataSchema(List(new TableDataColumn("Name"), new TableDataColumn("Price"), new TableDataColumn("Volume"), new TableDataColumn("Unko")))
-            channel.basicPublish(exchangeName, "", null, schema.getBytes)
+            channel.basicPublish(exchangeName, topicName, null, schema.getBytes)
             println(" [x] Sent ' " + schema.toString)        
         }
     }
 }
 
 object MarketDataServer {
+    
+   	def topicNameForBroadCast = "mdserver.client.broadcast"
 
     def main(args: Array[String]) {
         val stockNames = List("Toyota", "Honda", "Nissan")
@@ -71,9 +87,7 @@ object MarketDataServer {
         val mdServerActor = ActorSystem("MarketDataServer").actorOf(
         		Props(new MarketDataServer( factory )), 
                 "mdserver")
-                
-        mdServerActor ! SendTableDataSchema( "" )
-                
+                                
 		while (true) {
 			stockNames.foreach( stockName => {
 			    val record = new RealTimeMarketDataRecord( stockName, rnd.nextDouble, rnd.nextDouble )
