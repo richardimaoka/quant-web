@@ -2,7 +2,7 @@ package com.paulsnomura.mdserver
 
 trait Publisher {
     def connect()
-    def disconnect()
+    def disConnect()
     def broadcast[T]( data: T )
-    def publish[S, T]( clientIdentifier: S, data : T )
+    def send[S, T]( clientIdentifier: S, data : T )
 }

@@ -7,48 +7,53 @@ import akka.actor.Actor
 import TableDataServer._
 
 abstract class TableDataServer extends Actor {
-    //Dependency Injection by self-type annotation
-    this : Publisher with Subscriber =>
-        
-	var keyedItems : Map[String, TableDataRow] = _
-	var schema     : TableDataSchema = _
+	var keyedItems : Map[String, TableDataRow] = _  //current table content
+	var schema     : TableDataSchema = _            //current table schema
 
-    override def callback[T](clientIdentifier: T) = {
+	type clientIdentifierType //typically a String
+	
+	//Dependency Injection
+    protected def publisher  : Publisher  
+    protected def subscriber : Subscriber
+           
+    protected def callback(clientIdentifier: clientIdentifierType) : Unit = {
         self ! SendTableDataSchema(clientIdentifier)
         self ! SendEntireTableData(clientIdentifier)
     } 
 	
+	private def connect() : Unit = {
+	    publisher.connect()
+	    subscriber.connect()
+	}
+	
+	private def disConnect() : Unit = {
+	    publisher.disConnect()
+	    subscriber.disConnect()
+	}
+	
     override def preStart(): Unit = {
-        connect() //both publisher and subscriber connect 
-
+        connect() //both publisher and subscriber connect
+        subscriber.setupCallback( (x : clientIdentifierType) => callback( x ) )
         self ! BroadcastTableDataSchema
         self ! GetAllRecordData 
     } 
 
     override def postStop(): Unit = {
-        disconnect() //both publisher and subscriber disconnect
+        disConnect() //both publisher and subscriber disconnect
     }
-
-    //Core logic of a concrete TableDataServer, which at least should have Market Data -> Table Data conversion logic 
-    def coreReceive : Receive
-
-    def commonReceive : Receive = {
-        case GetAllRecordData => {
-            //start multiple market data subscribers (Actor children) by Akka router?
-            println(" [x] Start subscription to all the market data (but not yet implemented now...)")        
-        }
-        case SendEntireTableData(clientIdentifier) => {
-            //do we actually want to convert keyedItems -> list?
-            publish(clientIdentifier, keyedItems)
-            println(" [x] Sending all the data to a single client")        
-        }
-        case SendTableDataSchema( clientIdentifier ) => {
-            publish(clientIdentifier, schema)
-        }
+    
+    override def receive = {
+        case row : TableDataRow 
+        	=> publisher.broadcast(row)
+        case GetAllRecordData   
+        	=> spinOutTableDataListners()
+        case SendEntireTableData(clientIdentifier) 
+        	=> publisher.send(clientIdentifier, keyedItems) //do we actually want to convert keyedItems -> list?
+        case SendTableDataSchema( clientIdentifier ) 
+        	=> publisher.send(clientIdentifier, schema)
     }
-
-    override def receive = coreReceive orElse commonReceive
-
+        
+    def spinOutTableDataListners() : Unit
 }
 
 object TableDataServer {
