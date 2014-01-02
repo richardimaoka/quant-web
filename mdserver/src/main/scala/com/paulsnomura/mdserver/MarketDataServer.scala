@@ -23,12 +23,17 @@ extends Actor {
     var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]();
 
     override def preStart(): Unit = {
+        println( "Starting up the MD Server actor..." )
+        
         connection = connectionFactory.newConnection()
+        println( "MD server actor connected to " + connection )
+        
         channel = connection.createChannel()
-
+        println( "MD server actor created a channel = " + channel ) 
+        
         //create an exchange if it is not present in the RabbitMQ broker, and get it if it exists already?
-        channel.exchangeDeclare(exchangeName + ".client", "topic");
-        channel.exchangeDeclare(exchangeName + ".server", "direct" )
+        println( channel.exchangeDeclare(exchangeName + ".client", "topic") )
+        println( channel.exchangeDeclare(exchangeName + ".server", "direct" ) )
 
         val queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, exchangeName + ".server", "mdserver" )
@@ -44,6 +49,7 @@ extends Actor {
     } 
 
     override def postStop(): Unit = {
+        println( "MD server actor stopped" )
         channel.close()
         connection.close()
     }
@@ -53,7 +59,7 @@ extends Actor {
             val row = new TableDataRow(Map("Name" -> record.getName, "Price" -> record.getPrice, "Volume" -> record.getVolume))
             
             //reconstruct schema?            
-            channel.basicPublish(exchangeName, MarketDataServer.topicNameForBroadCast, null, row.getBytes)
+            channel.basicPublish(exchangeName + ".client", MarketDataServer.topicNameForBroadCast, null, row.getBytes)
             println(" [x] Sent ' " + row.toString)
         }
         case MarketDataServer.GetAllRecordData => {
@@ -66,7 +72,7 @@ extends Actor {
         }
         case MarketDataServer.SendTableDataSchema( topicName ) => {
             val schema = new TableDataSchema(List(new TableDataColumn("Name"), new TableDataColumn("Price"), new TableDataColumn("Volume"), new TableDataColumn("Unko")))
-            channel.basicPublish(exchangeName, topicName, null, schema.getBytes)
+            channel.basicPublish(exchangeName + ".client", topicName, null, schema.getBytes)
             println(" [x] Sent ' " + schema.toString)        
         }
     }

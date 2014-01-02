@@ -46,8 +46,8 @@ public class RealTimeMarketDataViewer extends Application {
 		String queueName = channel.queueDeclare().getQueue();
 		
 		//One binding for broadcasting, and the other binding for this client only
-		channel.queueBind(queueName, EXCHANGE_NAME, topicNameForBroadCast() ); 
-		channel.queueBind(queueName, EXCHANGE_NAME, topicNameForThisClient( queueName ) ); 
+		channel.queueBind(queueName, EXCHANGE_NAME + ".client", topicNameForBroadCast() ); 
+		channel.queueBind(queueName, EXCHANGE_NAME + ".client", topicNameForThisClient( queueName ) ); 
 		System.out.println( "Bound the queue = " + queueName + " to the MD server exchange = " + EXCHANGE_NAME + " with the binding keys = mdserver.client.broadcast, mdserver.client." + queueName );		
 		
 		channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
