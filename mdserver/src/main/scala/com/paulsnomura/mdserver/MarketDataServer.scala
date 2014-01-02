@@ -1,39 +1,46 @@
 package com.paulsnomura.mdserver
 
-import com.rabbitmq.client.ConnectionFactory
-import com.rabbitmq.client.Connection
-import com.rabbitmq.client.Channel
+import scala.collection.immutable.Map
 import scala.util.Random
+
+import org.apache.logging.log4j.LogManager
+
+import com.paulsnomura.mdserver.table.TableDataColumn
+import com.paulsnomura.mdserver.table.TableDataRow
+import com.paulsnomura.mdserver.table.TableDataSchema
+import com.rabbitmq.client.AMQP.BasicProperties
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
+import com.rabbitmq.client.ConnectionFactory
+import com.rabbitmq.client.DefaultConsumer
+import com.rabbitmq.client.Envelope
+
 import akka.actor.Actor
 import akka.actor.ActorSystem
 import akka.actor.Props
-import com.paulsnomura.mdserver.table.TableDataRow
-import com.paulsnomura.mdserver.table.TableDataSchema
-import com.paulsnomura.mdserver.table.TableDataColumn
-import scala.collection.immutable.Map
-import com.rabbitmq.client.DefaultConsumer
-import com.rabbitmq.client.Envelope
-import com.rabbitmq.client.AMQP.BasicProperties
-import org.apache.commons.lang3.SerializationUtils
+import akka.actor.actorRef2Scala
 
 class MarketDataServer(connectionFactory: ConnectionFactory, exchangeName: String = "market_data")
-extends Actor {
+extends Actor{
+    
+    val logger = LogManager.getLogger(this.getClass().getName())
+    
     var connection: Connection = null
     var channel: Channel = null
     var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]();
 
     override def preStart(): Unit = {
-        println( "Starting up the MD Server actor..." )
+        logger.debug( "Starting up the MD Server actor..." )
         
         connection = connectionFactory.newConnection()
-        println( "MD server actor connected to " + connection )
+        logger.info( "MD server actor connected to " + connection )
         
         channel = connection.createChannel()
-        println( "MD server actor created a channel = " + channel ) 
+        logger.info( "MD server actor created a channel = " + channel ) 
         
         //create an exchange if it is not present in the RabbitMQ broker, and get it if it exists already?
-        println( channel.exchangeDeclare(exchangeName + ".client", "topic") )
-        println( channel.exchangeDeclare(exchangeName + ".server", "direct" ) )
+        logger.info( channel.exchangeDeclare(exchangeName + ".client", "topic") )
+        logger.info( channel.exchangeDeclare(exchangeName + ".server", "direct" ) )
 
         val queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, exchangeName + ".server", "mdserver" )
@@ -49,7 +56,7 @@ extends Actor {
     } 
 
     override def postStop(): Unit = {
-        println( "MD server actor stopped" )
+        logger.info( "MD server actor stopped" )
         channel.close()
         connection.close()
     }
@@ -60,20 +67,20 @@ extends Actor {
             
             //reconstruct schema?            
             channel.basicPublish(exchangeName + ".client", MarketDataServer.topicNameForBroadCast, null, row.getBytes)
-            println(" [x] Sent ' " + row.toString)
+            logger.info(" [x] Sent ' " + row.toString)
         }
         case MarketDataServer.GetAllRecordData => {
             //start multiple market data subscribers (Actor children) by Akka router?
-            println(" [x] Start subscription to all the market data (but not yet implemented now...)")        
+            logger.info(" [x] Start subscription to all the market data (but not yet implemented now...)")        
         }
         case MarketDataServer.SendEntireTableData => {
             //convert keyedItems -> list ?
-            println(" [x] Sending all the data to a single client (but not yet implemented now...)")        
+            logger.info(" [x] Sending all the data to a single client (but not yet implemented now...)")        
         }
         case MarketDataServer.SendTableDataSchema( topicName ) => {
             val schema = new TableDataSchema(List(new TableDataColumn("Name"), new TableDataColumn("Price"), new TableDataColumn("Volume"), new TableDataColumn("Unko")))
             channel.basicPublish(exchangeName + ".client", topicName, null, schema.getBytes)
-            println(" [x] Sent ' " + schema.toString)        
+            logger.info(" [x] Sent ' " + schema.toString)        
         }
     }
 }
