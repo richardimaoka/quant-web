@@ -79,7 +79,7 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
         case SendTableDataSchema( clientIdentifier ) => 
             publisher.send(clientIdentifier, schema)        
         case UpdateTableDataSchma( additionalColumnNames ) => {
-        	schema = new TableDataSchema( schema.getColumns.toList ++ additionalColumnNames )
+        	schema = new TableDataSchema( schema.getColumnNames.toList ++ additionalColumnNames )
         	publisher.broadcast(schema)
         }
     }

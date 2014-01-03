@@ -3,10 +3,10 @@ package com.paulsnomura.mdserver.table
 import org.apache.commons.lang3.SerializationUtils
 import scala.collection.immutable.SortedSet
 
-class TableDataSchema (columns : List[String]) extends java.io.Serializable {
-	private val _columns = columns.toSet
+class TableDataSchema (columnNames : List[String]) extends java.io.Serializable {
 	
-	def getColumns = _columns
+    def getColumnNames = columnNames
+    def getColumns     = getColumnNames.toSet.map( (x: String) => new TableDataColumn(x) )
 			
 	def getBytes = SerializationUtils.serialize(this)
 	
