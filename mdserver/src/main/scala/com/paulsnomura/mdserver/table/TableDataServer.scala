@@ -8,7 +8,7 @@ import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataSchema
 import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
 import com.paulsnomura.mdserver.table.TableDataServer.GetAllRecordData
 import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
-import com.paulsnomura.mdserver.table.TableDataServer.BroadcastTableDataSchema
+import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataSchma
 import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
 import com.paulsnomura.mdserver.table.TableDataServer.Logger
 
@@ -16,9 +16,8 @@ import akka.actor.Actor
 import akka.actor.actorRef2Scala
 
 abstract class TableDataServer( pKeyName : String ) extends Actor {
-
-	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]()  //current table content
-	var schema     : TableDataSchema = _  //current table schema
+	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]() //current table content
+	var schema     : TableDataSchema = new TableDataSchema( List() )         //current table schema
 
 	type clientIdentifierType //typically a String
 	
@@ -48,7 +47,6 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
     override def preStart(): Unit = {
         connect() //both publisher and subscriber connect
         subscriber.setupCallback( (x : clientIdentifierType) => callback( x ) )
-        self ! BroadcastTableDataSchema
         self ! GetAllRecordData 
     } 
 
@@ -61,8 +59,6 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
     def processMessage( msg: MessageCase ): Unit = msg match {
         case GetAllRecordData => 
             spinOutTableDataListners()
-        case BroadcastTableDataSchema => 
-            publisher.broadcast(schema)
         case SendTableDataRow(map) => {
             Logger.info( "{} receivede", SendTableDataRow(map) )
             map.get(primaryKeyName) match {
@@ -82,6 +78,10 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
             publisher.send(clientIdentifier, keyedItems) //do we actually want to convert keyedItems -> list?
         case SendTableDataSchema( clientIdentifier ) => 
             publisher.send(clientIdentifier, schema)        
+        case UpdateTableDataSchma( additionalColumnNames ) => {
+        	schema = new TableDataSchema( schema.getColumns.toList ++ additionalColumnNames )
+        	publisher.broadcast(schema)
+        }
     }
     
     override def receive = { case msg : MessageCase => processMessage( msg ) }
@@ -92,8 +92,8 @@ object TableDataServer {
  
     sealed abstract class MessageCase
     case object GetAllRecordData extends MessageCase //sent by the actor to itself on startup   
-    case object BroadcastTableDataSchema extends MessageCase //sent by the actor to itself on startup 
     case class  SendTableDataRow( map: Map[String, Any] ) extends MessageCase //sent by a listener to forward the table data row to server's clients
     case class  SendTableDataSchema[T]( clientIdentifier: T ) extends MessageCase //1) @client's startup and 2) when the schema is updated
     case class  SendEntireTableData[T]( clientIdentifier: T ) extends MessageCase //typically requested by a client on its startup
+    case class  UpdateTableDataSchma( additionalColumnNames : List[String] ) extends MessageCase 
 }

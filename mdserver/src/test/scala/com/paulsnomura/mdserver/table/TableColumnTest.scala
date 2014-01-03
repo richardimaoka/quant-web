@@ -11,14 +11,14 @@ class TableColumnTest extends FlatSpec with Matchers {
         assert( a1 == a2 )
     }
 
-    "TableDataColumn" should " NOT be equal when colmnName is different" in {
+    it should " NOT be equal when colmnName is different" in {
         val a = new TableDataColumn( "a" )
         val b = new TableDataColumn( "b" )
         
         assert( a != b )
     }
     
-    "TableDataColumn" should " be restored from getBytes" in {
+    it should " be restored from getBytes" in {
         val originalColumn = new TableDataColumn( "a" )
         val restoredColumn = SerializationUtils.deserialize( originalColumn.getBytes )
 

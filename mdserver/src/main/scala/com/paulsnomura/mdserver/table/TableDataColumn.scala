@@ -5,7 +5,7 @@ import org.apache.commons.lang3.SerializationUtils
 
 class TableDataColumn (columnName: String) extends Serializable {
  
-    def getColumnName        = columnName
+    def getColumnName = columnName
     
     override def equals(other: Any) = other match {
         case that: TableDataColumn => this.getColumnName == that.getColumnName

@@ -1,18 +1,22 @@
 package com.paulsnomura.mdserver.table
 
+import scala.annotation.migration
 import scala.concurrent.duration.DurationInt
+
 import org.mockito.Matchers.notNull
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.scalatest.FlatSpecLike
+
 import com.paulsnomura.mdserver.Publisher
 import com.paulsnomura.mdserver.Subscriber
-import com.paulsnomura.mdserver.table.TableDataServer.BroadcastTableDataSchema
 import com.paulsnomura.mdserver.table.TableDataServer.GetAllRecordData
 import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
 import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
 import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
 import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataSchema
+import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataSchma
+
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -56,10 +60,8 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    verify(subscriberMock).setupCallback( notNull() )
 	}
 		
-	it should "send %s & %s messages to itself (relayed to testActor for testing)".format(BroadcastTableDataSchema, GetAllRecordData) in {
-	    expectMsgAllOf( 1.seconds, 
-	            BroadcastTableDataSchema, 
-	            GetAllRecordData )
+	it should "send %s messages to itself (relayed to testActor for testing)".format(GetAllRecordData) in {
+	    expectMsg( GetAllRecordData )
 	} 
 	
 	it should "receive & publish TableDataRow" in {
@@ -79,18 +81,18 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
    	    verify(publisherMock).broadcast( new TableDataRow( message.map ) )
 	}
 	
-	it should "send current schema and entire data to client" in {
+	it should "send current schema and entire data to client on client's startup" in {
 	    val publisherMock  = mock(classOf[Publisher])
 	    val subscriberMock = mock(classOf[Subscriber])    
 	    
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ).underlyingActor 
-	    expectMsgAllOf( 1.seconds, BroadcastTableDataSchema, GetAllRecordData )
+	    expectMsgAllOf( 1.seconds, GetAllRecordData )
 	    
 	    val clientID = "myself";
 	    server.callback( clientID )
 	    expectMsgAllOf( 1.seconds, SendEntireTableData( clientID ), SendTableDataSchema( clientID ) )
 	    
-//	    verify(publisherMock).send(clientID, Map[String, Any]())
+	    verify(publisherMock).send(clientID, Map[String, Any]())
 //	    verify(publisherMock).send(clientID, new TableDataSchema())
 	    
 	}
@@ -98,7 +100,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	it should "construct the inner table consistent with cumulative SendTableDataRow inputs" in {
 	    val publisherMock  = mock(classOf[Publisher])
 	    val subscriberMock = mock(classOf[Subscriber])     
-	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ), "1" )
+	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) )
 
         val expectedMap = Map[String, TableDataRow](
             "Toyota" -> new TableDataRow(Map[String, Any]("Name" -> "Toyota", "Price" -> 100, "Volume" -> 50)),
@@ -111,5 +113,16 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    assert( server.underlyingActor.keyedItems == expectedMap )
 	}
 
+	it should "process UpdateTableDataSchema message appropriately" in {
+	    val publisherMock  = mock(classOf[Publisher])
+	    val subscriberMock = mock(classOf[Subscriber])     
+	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) )
+	    
+	    server ! UpdateTableDataSchma( List( "Name", "Price", "Volume" ) )    
+	    assert( server.underlyingActor.schema == new TableDataSchema( List( "Name", "Price", "Volume" ) ) )
+
+	    server ! UpdateTableDataSchma( List( "Name", "High", "Low" ) )    
+	    assert( server.underlyingActor.schema == new TableDataSchema( List( "Name", "Price", "Volume", "High", "Low" ) ) )
+	}
 	
 }

@@ -6,34 +6,16 @@ import org.apache.commons.lang3.SerializationUtils
 class TableDataSchemaTest extends FlatSpec with Matchers {
 
     "TableDataSchema" should " be equal when colmns are equal" in {
-        val a1 = new TableDataColumn( "a" )
-        val b1 = new TableDataColumn( "b" )
-        val a2 = new TableDataColumn( "a" )
-        val b2 = new TableDataColumn( "b" )
-        
-        //Firstly make sure respective columns are equal - precondition for the TableDataSchema equality 
-        assert( a1 == a2 )
-        assert( b1 == b2 )
-        
-        val schema1 = new TableDataSchema( List( a1, b1 ) )
-        val schema2 = new TableDataSchema( List( a2, b2 ) )
+        val schema1 = new TableDataSchema( List( "a", "b" ) )
+        val schema2 = new TableDataSchema( List( "a", "b" ) )
         
         assert( schema1 == schema2 )
         assert( schema1.hashCode == schema2.hashCode )
     }
 
-    "TableDataSchema" should " NOT be equal when colmns are different" in {
-        val a1 = new TableDataColumn( "a" )
-        val b1 = new TableDataColumn( "b" )
-        val a2 = new TableDataColumn( "a" )
-        val b2 = new TableDataColumn( "bb" )
-        
-        //Only b1 and b2 are different, but still two schemas should be different
-        assert( a1 == a2 )
-        assert( b1 != b2 )
-        
-        val schema1 = new TableDataSchema( List( a1, b1 ) )
-        val schema2 = new TableDataSchema( List( a2, b2 ) )
+    it should " NOT be equal when colmns are different" in {       
+        val schema1 = new TableDataSchema( List( "a", "b" ) )
+        val schema2 = new TableDataSchema( List( "a", "bb" ) )
         
         assert( schema1 != schema2 )
         assert( schema1.hashCode != schema2.hashCode )

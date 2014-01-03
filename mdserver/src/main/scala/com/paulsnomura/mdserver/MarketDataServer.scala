@@ -78,7 +78,7 @@ extends Actor{
             logger.info(" [x] Sending all the data to a single client (but not yet implemented now...)")        
         }
         case MarketDataServer.SendTableDataSchema( topicName ) => {
-            val schema = new TableDataSchema(List(new TableDataColumn("Name"), new TableDataColumn("Price"), new TableDataColumn("Volume"), new TableDataColumn("Unko")))
+            val schema = new TableDataSchema(List("Name", "Price", "Volume", "Unko"))
             channel.basicPublish(exchangeName + ".client", topicName, null, schema.getBytes)
             logger.info(" [x] Sent ' " + schema.toString)        
         }
