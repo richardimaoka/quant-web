@@ -10,19 +10,21 @@ import com.paulsnomura.mdserver.Subscriber
 import com.paulsnomura.mdserver.table.TableDataServer.BroadcastTableDataSchema
 import com.paulsnomura.mdserver.table.TableDataServer.GetAllRecordData
 import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
+import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
+import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
+import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataSchema
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.actor.actorRef2Scala
+import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
 
 /**
- * 
  * testActor : when TableDataServerMock sends a message to itself, it relays the message to testActor for testing purpose
  */
 class TableDataServerMock( pub: Publisher, sub: Subscriber, testActor : ActorRef ) 
-extends TableDataServer{
+extends TableDataServer( "Name" ){ //primary Key = "Name"
     type clientIdentifierType = String
     override def publisher = pub
     override def subscriber = sub
@@ -36,39 +38,78 @@ extends TableDataServer{
     }    
 }
 
+
+/**
+ * Be careful on testActor shared across test cases (i.e.) as the above TAbleDataServerMock relays messages back to testActor
+ * messages from other test cases can be received in the current test case, which causes confusing errors
+ */
 class TableDataServerTest 
 extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
     
 	"TableDataServer" should "establish connection on its (actor) startup" in {    
 	    val publisherMock  = mock(classOf[Publisher])
 	    val subscriberMock = mock(classOf[Subscriber])     
-	    val server = system.actorOf( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) )
+	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ) 
 	    
 	    verify(publisherMock).connect()
 	    verify(subscriberMock).connect()	
 	    verify(subscriberMock).setupCallback( notNull() )
 	}
-	
+		
 	it should "send %s & %s messages to itself (relayed to testActor for testing)".format(BroadcastTableDataSchema, GetAllRecordData) in {
 	    expectMsgAllOf( 1.seconds, 
 	            BroadcastTableDataSchema, 
 	            GetAllRecordData )
 	} 
 	
-	"TableDataServer" should " receive & publish TableDataRow" in {
+	it should "receive & publish TableDataRow" in {
 	    val publisherMock  = mock(classOf[Publisher])
 	    val subscriberMock = mock(classOf[Subscriber])     
-	    val server = system.actorOf( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) )
+	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ) 
 
-	    val message = new SendTableDataRow( Map[String, String]( "fieldName" -> "this is test" ) )
+	    val message = new SendTableDataRow( Map[String, String]( "Name" -> "this is test" ) )
 	    server ! message 	
 	        
 	    //fishforMessage, since other messages like BroadcastTableDataSchema & GetAllRecordData can be relayed to testActor
 	    fishForMessage() { 
-	        case returnedMessage : SendTableDataRow => returnedMessage.map == message.map
+	        case returnedMessage : SendTableDataRow => returnedMessage.map == message.map //if this condition is satisfied, immediate success
 	        case _ => false //fishForMessage keeps running while this returns false
 	    }
 	    
    	    verify(publisherMock).broadcast( new TableDataRow( message.map ) )
 	}
+	
+	it should "send current schema and entire data to client" in {
+	    val publisherMock  = mock(classOf[Publisher])
+	    val subscriberMock = mock(classOf[Subscriber])    
+	    
+	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ).underlyingActor 
+	    expectMsgAllOf( 1.seconds, BroadcastTableDataSchema, GetAllRecordData )
+	    
+	    val clientID = "myself";
+	    server.callback( clientID )
+	    expectMsgAllOf( 1.seconds, SendEntireTableData( clientID ), SendTableDataSchema( clientID ) )
+	    
+//	    verify(publisherMock).send(clientID, Map[String, Any]())
+//	    verify(publisherMock).send(clientID, new TableDataSchema())
+	    
+	}
+	
+	it should "construct the inner table consistent with cumulative SendTableDataRow inputs" in {
+	    val publisherMock  = mock(classOf[Publisher])
+	    val subscriberMock = mock(classOf[Subscriber])     
+	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ), "1" )
+
+        val expectedMap = Map[String, TableDataRow](
+            "Toyota" -> new TableDataRow(Map[String, Any]("Name" -> "Toyota", "Price" -> 100, "Volume" -> 50)),
+            "Honda" ->  new TableDataRow(Map[String, Any]("Name" -> "Honda",  "Price" -> 101, "Volume" -> 60)),
+            "Nissan" -> new TableDataRow(Map[String, Any]("Name" -> "Nissan", "Price" -> 102, "Volume" -> 70))
+        )
+	    
+	    expectedMap.values.foreach( x => server.underlyingActor.receive( new SendTableDataRow( x.map ) ) )
+	    
+	    assert( server.underlyingActor.keyedItems == expectedMap )
+	}
+
+	
 }

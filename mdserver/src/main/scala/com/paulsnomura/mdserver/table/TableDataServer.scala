@@ -1,26 +1,38 @@
 package com.paulsnomura.mdserver.table
 
-import com.paulsnomura.mdserver.Subscriber
+import org.apache.logging.log4j.LogManager
+
 import com.paulsnomura.mdserver.Publisher
+import com.paulsnomura.mdserver.Subscriber
+import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataSchema
+import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
+import com.paulsnomura.mdserver.table.TableDataServer.GetAllRecordData
+import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
+import com.paulsnomura.mdserver.table.TableDataServer.BroadcastTableDataSchema
+import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
+import com.paulsnomura.mdserver.table.TableDataServer.Logger
+
 import akka.actor.Actor
+import akka.actor.actorRef2Scala
 
-import TableDataServer._
+abstract class TableDataServer( pKeyName : String ) extends Actor {
 
-abstract class TableDataServer extends Actor {
-	var keyedItems : Map[String, TableDataRow] = _  //current table content
-	var schema     : TableDataSchema = _            //current table schema
+	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]()  //current table content
+	var schema     : TableDataSchema = _  //current table schema
 
 	type clientIdentifierType //typically a String
 	
-	//Dependency Injection
+    //Dependency Injection
     protected def publisher  : Publisher  
     protected def subscriber : Subscriber
            
-    protected def callback(clientIdentifier: clientIdentifierType) : Unit = {
+    def primaryKeyName = pKeyName
+
+    def callback(clientIdentifier: clientIdentifierType) : Unit = {
         self ! SendTableDataSchema(clientIdentifier)
         self ! SendEntireTableData(clientIdentifier)
     } 
-	
+		
 	private def connect() : Unit = {
 	    publisher.connect()
 	    subscriber.connect()
@@ -47,22 +59,36 @@ abstract class TableDataServer extends Actor {
     //To enable compiler warning for non exhaustive match for MessageCase, 
     //Define this as a standalone pattern match rather than partial function on which compiler does not perform non exhaustive check
     def processMessage( msg: MessageCase ): Unit = msg match {
-        case GetAllRecordData   
-        	=> spinOutTableDataListners()
-        case BroadcastTableDataSchema
-        	=> publisher.broadcast(schema)
-        case SendTableDataRow( map ) 
-        	=> publisher.broadcast( new TableDataRow( map ) )
-        case SendEntireTableData(clientIdentifier) 
-        	=> publisher.send(clientIdentifier, keyedItems) //do we actually want to convert keyedItems -> list?
-        case SendTableDataSchema( clientIdentifier ) 
-        	=> publisher.send(clientIdentifier, schema)        
+        case GetAllRecordData => 
+            spinOutTableDataListners()
+        case BroadcastTableDataSchema => 
+            publisher.broadcast(schema)
+        case SendTableDataRow(map) => {
+            Logger.info( "{} receivede", SendTableDataRow(map) )
+            map.get(primaryKeyName) match {
+                case Some(primaryKey) => { //If the sent row has the primary key
+                    val row = new TableDataRow(map)
+                    
+                    publisher.broadcast(row)
+                    Logger.info( "{} broadcasted", row )
+                    
+                    keyedItems += (primaryKey.toString -> row)
+                }
+                case None =>
+                    Logger.warn( "{} does not contain the primary key column = {}", SendTableDataRow(map), primaryKeyName )
+            }
+        }       	    
+        case SendEntireTableData(clientIdentifier) => 
+            publisher.send(clientIdentifier, keyedItems) //do we actually want to convert keyedItems -> list?
+        case SendTableDataSchema( clientIdentifier ) => 
+            publisher.send(clientIdentifier, schema)        
     }
     
     override def receive = { case msg : MessageCase => processMessage( msg ) }
 }
 
 object TableDataServer {
+    val Logger = LogManager.getLogger(this.getClass().getName())
  
     sealed abstract class MessageCase
     case object GetAllRecordData extends MessageCase //sent by the actor to itself on startup   

@@ -5,7 +5,7 @@ import org.apache.commons.lang3.SerializationUtils
 
 class TableDataRow(fieldsAndValues: Map[String, Any]) extends Serializable {
 
-    private def map = fieldsAndValues
+    def map = fieldsAndValues
     
     def getValue(fieldName: String) = fieldsAndValues.getOrElse(fieldName, "")
 
