@@ -31,6 +31,8 @@ abstract class TableDataServer extends Actor {
 	    subscriber.disConnect()
 	}
 	
+    def spinOutTableDataListners() : Unit 
+    
     override def preStart(): Unit = {
         connect() //both publisher and subscriber connect
         subscriber.setupCallback( (x : clientIdentifierType) => callback( x ) )
@@ -41,26 +43,31 @@ abstract class TableDataServer extends Actor {
     override def postStop(): Unit = {
         disConnect() //both publisher and subscriber disconnect
     }
-    
-    override def receive = {
-        case row : TableDataRow 
-        	=> publisher.broadcast(row)
+
+    //To enable compiler warning for non exhaustive match for MessageCase, 
+    //Define this as a standalone pattern match rather than partial function on which compiler does not perform non exhaustive check
+    def processMessage( msg: MessageCase ): Unit = msg match {
         case GetAllRecordData   
         	=> spinOutTableDataListners()
+        case BroadcastTableDataSchema
+        	=> publisher.broadcast(schema)
+        case SendTableDataRow( map ) 
+        	=> publisher.broadcast( new TableDataRow( map ) )
         case SendEntireTableData(clientIdentifier) 
         	=> publisher.send(clientIdentifier, keyedItems) //do we actually want to convert keyedItems -> list?
         case SendTableDataSchema( clientIdentifier ) 
-        	=> publisher.send(clientIdentifier, schema)
+        	=> publisher.send(clientIdentifier, schema)        
     }
-        
-    def spinOutTableDataListners() : Unit
+    
+    override def receive = { case msg : MessageCase => processMessage( msg ) }
 }
 
 object TableDataServer {
  
     sealed abstract class MessageCase
     case object GetAllRecordData extends MessageCase //sent by the actor to itself on startup   
-    case object BroadcastTableDataSchema extends MessageCase //sent by the actor to itself on startup   
+    case object BroadcastTableDataSchema extends MessageCase //sent by the actor to itself on startup 
+    case class  SendTableDataRow( map: Map[String, Any] ) extends MessageCase //sent by a listener to forward the table data row to server's clients
     case class  SendTableDataSchema[T]( clientIdentifier: T ) extends MessageCase //1) @client's startup and 2) when the schema is updated
     case class  SendEntireTableData[T]( clientIdentifier: T ) extends MessageCase //typically requested by a client on its startup
 }
