@@ -1,9 +1,8 @@
 package com.paulsnomura.mdserver.table
 
 import scala.collection.immutable.Map
-import org.apache.commons.lang3.SerializationUtils
 
-class TableDataRow(fieldsAndValues: Map[String, Any]) extends Serializable {
+class TableDataRow(fieldsAndValues: Map[String, Any]) extends TableDataTransmittable {
 
     def map = fieldsAndValues
     
@@ -11,7 +10,6 @@ class TableDataRow(fieldsAndValues: Map[String, Any]) extends Serializable {
 
     override def toString = "[TableDataRow]: " + fieldsAndValues.toString
 
-    def getBytes = SerializationUtils.serialize(this)
 
     def canEqual(other: Any): Boolean = other.isInstanceOf[TableDataRow] 
     
