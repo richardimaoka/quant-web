@@ -8,7 +8,6 @@ import org.scalatest.FlatSpecLike
 
 import com.paulsnomura.mdserver.Publisher
 import com.paulsnomura.mdserver.Subscriber
-import com.paulsnomura.mdserver.table.TableDataServer.GetAllRecordData
 import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
 import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
 import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
@@ -30,7 +29,6 @@ extends TableDataServer( "Name" ){ //primary Key = "Name"
     type clientIdentifierType = String
     override def publisher = pub
     override def subscriber = sub
-    override def spinOutTableDataListners = {}
     
     override def receive = {
         case message : MessageCase => {
@@ -57,10 +55,6 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    verify(subscriberMock).connect()	
 	}
 		
-	it should "send %s messages to itself (relayed to testActor for testing)".format(GetAllRecordData) in {
-	    expectMsg( GetAllRecordData )
-	} 
-	
 	it should "receive & publish TableDataRow" in {
 	    val publisherMock  = mock(classOf[Publisher[TableDataTransmittable]])
 	    val subscriberMock = mock(classOf[Subscriber[String]])     
@@ -83,7 +77,6 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    val subscriberMock = mock(classOf[Subscriber[String]])    
 	    
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ).underlyingActor 
-	    expectMsgAllOf( 1.seconds, GetAllRecordData )
 	    
 	    val clientID = "myself";
 	    server.callback( clientID )
