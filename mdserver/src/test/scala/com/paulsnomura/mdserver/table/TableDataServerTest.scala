@@ -27,7 +27,7 @@ import akka.testkit.TestKit
 /**
  * testActor : when TableDataServerMock sends a message to itself, it relays the message to testActor for testing purpose
  */
-class TableDataServerMock( pub: Publisher, sub: Subscriber, testActor : ActorRef ) 
+class TableDataServerMock( pub: Publisher[TableDataTransmittable], sub: Subscriber, testActor : ActorRef ) 
 extends TableDataServer( "Name" ){ //primary Key = "Name"
     type clientIdentifierType = String
     override def publisher = pub
@@ -51,7 +51,7 @@ class TableDataServerTest
 extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
     
 	"TableDataServer" should "establish connection on its (actor) startup" in {    
-	    val publisherMock  = mock(classOf[Publisher])
+	    val publisherMock  = mock(classOf[Publisher[TableDataTransmittable]])
 	    val subscriberMock = mock(classOf[Subscriber])     
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ) 
 	    
@@ -65,7 +65,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	} 
 	
 	it should "receive & publish TableDataRow" in {
-	    val publisherMock  = mock(classOf[Publisher])
+	    val publisherMock  = mock(classOf[Publisher[TableDataTransmittable]])
 	    val subscriberMock = mock(classOf[Subscriber])     
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ) 
 
@@ -82,7 +82,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	}
 	
 	it should "send current schema and entire data to client on client's startup" in {
-	    val publisherMock  = mock(classOf[Publisher])
+	    val publisherMock  = mock(classOf[Publisher[TableDataTransmittable]])
 	    val subscriberMock = mock(classOf[Subscriber])    
 	    
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) ).underlyingActor 
@@ -98,7 +98,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	}
 	
 	it should "construct the inner table consistent with cumulative SendTableDataRow inputs" in {
-	    val publisherMock  = mock(classOf[Publisher])
+	    val publisherMock  = mock(classOf[Publisher[TableDataTransmittable]])
 	    val subscriberMock = mock(classOf[Subscriber])     
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) )
 
@@ -114,7 +114,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	}
 	
 	it should "process UpdateTableDataSchema message appropriately" in {
-	    val publisherMock  = mock(classOf[Publisher])
+	    val publisherMock  = mock(classOf[Publisher[TableDataTransmittable]])
 	    val subscriberMock = mock(classOf[Subscriber])     
 	    val server = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock( publisherMock, subscriberMock, testActor ) ) )
 	    

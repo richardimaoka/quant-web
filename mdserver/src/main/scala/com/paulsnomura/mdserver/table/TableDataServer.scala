@@ -23,7 +23,7 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
 	type clientIdentifierType //typically a String
 	
     //Dependency Injection
-    protected def publisher  : Publisher  
+    protected def publisher  : Publisher[TableDataTransmittable]  
     protected def subscriber : Subscriber
            
     def primaryKeyName = pKeyName
@@ -76,7 +76,7 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
             }
         }       	    
         case SendEntireTableData(recipientName) => 
-            keyedItems.foreach( row => publisher.send(recipientName, row))
+            keyedItems.values.foreach( row => publisher.send(recipientName, row))
         case SendTableDataSchema( recipientName ) => 
             publisher.send(recipientName, schema)        
         case UpdateTableDataSchma( additionalColumnNames ) => {

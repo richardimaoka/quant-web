@@ -1,8 +1,10 @@
 package com.paulsnomura.mdserver
 
-trait Publisher {
+trait Publisher[MessageType]{
+    type PublishMessageType = MessageType
+    
     def connect()
     def disConnect()
-    def broadcast[T]( data: T )
-    def send[T]( recipientName: String, data : T )
+    def broadcast( data: PublishMessageType )
+    def send( recipientName: String, data : PublishMessageType )
 }
