@@ -48,34 +48,4 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
         Thread.sleep(500); //BEEEP!!!!!
         isSuccess should equal (true)
     }
-        
-    "RabbitMQPublisher" should " open a RabbitMQConnection by connect() and close it by disconnect()" in {
-        val publisher = new RabbitMQPublisher(factory, testExchangeName)
-        publisher.connect() //should throw java.io.IOException if failed
-        publisher.disConnect() //should throw java.io.IOException if failed
-    }
-    
-    "RabbitMQPublisher" should " send a message to a single recipient by send()" in {
-        val testPublisherName = "test publisher"
-        val testMessage = "test string ring ring"
- 
-        val publisher = new RabbitMQPublisher[String](factory, testPublisherName)
-        publisher.connect()
-        
-        var isSuccess  = false
-        val subscriber = new RabbitMQSubscriber[String](factory, testPublisherName, message => {
-            testMessage should equal (message)
-            isSuccess = true 
-        })
-        subscriber.connect()
- 
-        publisher.send(subscriber.queueName, testMessage)
-        
-        Thread.sleep(500); //BEEEP!!!!!
-        
-        isSuccess should equal (true)
-        
-        publisher.disConnect()
-        subscriber.disConnect()
-    }
 }

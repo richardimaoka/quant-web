@@ -41,7 +41,7 @@ public class TableDataToJavaFXBridge {
 	public void processTableData(final TableView<TableDataRow> tableView, Object data){	
 		if( data instanceof TableDataSchema ){
 			TableDataSchema schema = (TableDataSchema) data;
-
+			
 			final ArrayList<TableColumn<TableDataRow, Object>> updatedColumns = new ArrayList<TableColumn<TableDataRow, Object>>();
 			
 			for (scala.collection.Iterator<TableDataColumn> iterator = schema.getColumns().iterator(); iterator.hasNext();)
@@ -57,7 +57,7 @@ public class TableDataToJavaFXBridge {
 		}
 		else if( data instanceof TableDataRow ){
 			TableDataRow row = (TableDataRow) data;
-			tableData.put(row.getValue("Name").toString(), row);       		
+			tableData.put(row.getValue("AssetName").toString(), row);       		
 			ObservableList<TableDataRow> list = FXCollections.observableArrayList( tableData.values() );
 			tableView.setItems(list);
 		}

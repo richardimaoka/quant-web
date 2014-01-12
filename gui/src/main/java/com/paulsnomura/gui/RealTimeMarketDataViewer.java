@@ -17,9 +17,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
+
 public class RealTimeMarketDataViewer extends Application {
-	
-	private static final String				EXCHANGE_NAME	= "market_data";
 	
 	private Connection						connection;
 	private Channel							channel;
@@ -28,8 +27,6 @@ public class RealTimeMarketDataViewer extends Application {
 	private final TableView<TableDataRow>	tableView		= new TableView<TableDataRow>();
 	private final TableDataToJavaFXBridge	bridge			= new TableDataToJavaFXBridge();
 	
-	private String topicNameForBroadCast() { return "mdserver.client.broadcast"; }
-	private String topicNameForThisClient( String queueName ) { return "mdserver.client." + queueName; }
 
 	/**
 	 * Initialize the RabbitMQ connection/channel to subscribe update from the TableData server
@@ -42,14 +39,7 @@ public class RealTimeMarketDataViewer extends Application {
 		connection = factory.newConnection();
 		channel = connection.createChannel();
 		
-		channel.exchangeDeclare(EXCHANGE_NAME + ".client", "topic");
-		String queueName = channel.queueDeclare().getQueue();
-		
-		//One binding for broadcasting, and the other binding for this client only
-		channel.queueBind(queueName, EXCHANGE_NAME + ".client", topicNameForBroadCast() ); 
-		channel.queueBind(queueName, EXCHANGE_NAME + ".client", topicNameForThisClient( queueName ) ); 
-		System.out.println( "Bound the queue = " + queueName + " to the MD server exchange = " + EXCHANGE_NAME + " with the binding keys = mdserver.client.broadcast, mdserver.client." + queueName );		
-		
+		String queueName = channel.queueDeclare().getQueue();		
 		channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
 			@Override
 			public void handleDelivery(String consumerTag, Envelope envelope, BasicProperties properties, byte[] body) throws IOException {
@@ -59,10 +49,13 @@ public class RealTimeMarketDataViewer extends Application {
 			}
 		});
 		
-		//Do we need to use a different channel??
-		//1) Actually can you do "fanout" 2) and the multiple servers will acknowledge your client's startup?
-		channel.exchangeDeclare( EXCHANGE_NAME + ".server", "direct" );  
-		channel.basicPublish( EXCHANGE_NAME + ".server", "mdserver", null, topicNameForThisClient( queueName ).getBytes() );
+		//Hmmm can't we use a companion object method??
+		String serverName = "mainMdServ";
+		String serverQueueName = serverName + ".queue"; 
+		String serverBroadCastExchangeName = serverName + ".broadcastExchange"; 
+		
+		channel.basicPublish( "", serverQueueName, null, queueName.getBytes() );
+		channel.queueBind(queueName, serverBroadCastExchangeName, "");
 		System.out.println( "Send MD Server this client's start-up message" );			
 	}
 	

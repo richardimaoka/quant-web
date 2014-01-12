@@ -4,8 +4,6 @@ import scala.concurrent.duration.DurationInt
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.scalatest.FlatSpecLike
-import com.paulsnomura.mdserver.Publisher
-import com.paulsnomura.mdserver.Subscriber
 import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
 import com.paulsnomura.mdserver.table.TableDataServer.ClientStartup
 import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
