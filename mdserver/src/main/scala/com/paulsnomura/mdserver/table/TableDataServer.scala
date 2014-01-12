@@ -23,8 +23,8 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
 	type clientIdentifierType //typically a String
 	
     //Dependency Injection
-    protected def publisher  : Publisher[TableDataTransmittable]  
-    protected def subscriber : Subscriber[TableDataTransmittable]
+    protected def publisher  : Publisher[TableDataTransmittable]  //Publisher publishes TableData
+    protected def subscriber : Subscriber[String]                 //Subscriber gets client names
            
     def primaryKeyName = pKeyName
 
@@ -47,7 +47,6 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
     
     override def preStart(): Unit = {
         connect() //both publisher and subscriber connect
-        subscriber.setupCallback( x => callback( x ) )
         self ! GetAllRecordData 
     } 
 

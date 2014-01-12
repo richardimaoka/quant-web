@@ -5,8 +5,8 @@ import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import org.apache.commons.lang3.SerializationUtils
 
-class RabbitMQPublisher[T <: java.io.Serializable]( connectionFactory : ConnectionFactory, publisherName: String ) 
-extends Publisher[T]{
+class RabbitMQPublisher[MessageType <: java.io.Serializable]( connectionFactory : ConnectionFactory, publisherName: String ) 
+extends Publisher[MessageType]{
    
     var connection : Connection = _
     var channel    : Channel    = _
@@ -49,4 +49,8 @@ extends Publisher[T]{
         //the default exchange uses queueName as the routingKey (i.e. second param of this method)
         channel.basicPublish("", queueName, null, sendableMessage )
     } 
+}
+
+object RabbitMQPublisher{
+    def exchangeName(publisherName : String) = publisherName + ".exchange"
 }

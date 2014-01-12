@@ -5,5 +5,4 @@ trait Subscriber[MessageType]{
     
     def connect()
     def disConnect()
-    def setupCallback[ T ]( callback : T )
 }

@@ -56,30 +56,26 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
     
     "RabbitMQPublisher" should " send a message to a single recipient by send()" in {
         val testPublisherName = "test publisher"
+        val testMessage = "test string ring ring"
+ 
         val publisher = new RabbitMQPublisher[String](factory, testPublisherName)
         publisher.connect()
-
-        val connection = factory.newConnection()
-        val channel    = connection.createChannel() //does not specify a channel number -> should be ok for the dafualt behavior
-        val queueName  = channel.queueDeclare().getQueue() //Actively declare a server-named exclusive, autodelete, non-durable queue
-        //neat trick: use RabbitMQ's default exchange which routes message specified by QueueName
         
-        val testMessage = "test string ring ring"
-        var isSuccess = false
-        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
-            override def handleDelivery(consumerTag : String, envelope : Envelope, properties : BasicProperties, body : Array[Byte]) = {
-                val data = SerializationUtils.deserialize( body )
-                testMessage should equal ( data ) 
-                isSuccess = true
-            }
-        })
-
-        publisher.send(queueName, testMessage)      
+        var isSuccess  = false
+        val subscriber = new RabbitMQSubscriber[String](factory, testPublisherName, message => {
+            testMessage should equal (message)
+            isSuccess = true }
+        )
+        subscriber.connect()
+ 
+        publisher.send(subscriber.queueName, testMessage)
+        
         Thread.sleep(500); //BEEEP!!!!!
+        
         isSuccess should equal (true)
-        channel.queueDelete( queueName )
-        connection.close()
+        
         publisher.disConnect()
+        subscriber.disConnect()
     }
     
 //        def connect()
