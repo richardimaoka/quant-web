@@ -18,7 +18,7 @@ extends Subscriber[MessageType]{
     
     def queueName  : String     = subscriberQueueName
     
-    val callback   : SubscribeMessageType => Unit = callBack 
+    val callback = callBack 
     
     //use try-catch idiom to make it more robust...?
     override def connect() = {

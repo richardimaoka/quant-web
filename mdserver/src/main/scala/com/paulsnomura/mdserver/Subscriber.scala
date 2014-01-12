@@ -5,4 +5,5 @@ trait Subscriber[MessageType]{
     
     def connect()
     def disConnect()
+    def callback  : SubscribeMessageType => Unit 
 }
