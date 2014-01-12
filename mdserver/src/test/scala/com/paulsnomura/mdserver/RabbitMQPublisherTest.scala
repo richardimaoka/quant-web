@@ -9,6 +9,7 @@ import com.rabbitmq.client.AMQP.BasicProperties
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
+import org.apache.commons.lang3.SerializationUtils
 
 /**
  * RabbitMQPublisher integration test - since it's real implementation, 
@@ -17,23 +18,16 @@ import java.util.concurrent.ThreadFactory
 class RabbitMQPublisherTest extends FlatSpec with Matchers {
 
     val testExchangeName = "test_exchange_never_use_this_outside_test"
-    
-    def fixture = new {       
-    }
-  
+    val factory    = new ConnectionFactory()        
+	//then call setters on the factory if you need...
+    factory.setHost("localhost"); //load from resources file
         
     "RabbitMQ Client API" should "work in this environment" in {
-	    val factory    = new ConnectionFactory() 
-        
-	    //then call setters on the factory if you need...
-        factory.setHost("localhost"); //load from resources file
-
-        val connection = factory.newConnection(  ); //does not specify ExecutorService nor broker addresses (hostname/port pairs) 
-        val channel    = connection.createChannel( ); //does not specify a channel number -> should be ok for the dafualt behavior
+        val connection = factory.newConnection(  ) //does not specify ExecutorService nor broker addresses (hostname/port pairs) 
+        val channel    = connection.createChannel( ) //does not specify a channel number -> should be ok for the dafualt behavior
         val declare    = channel.exchangeDeclare(testExchangeName, "topic") //declare a non-autodelete exchange with no extra arguments
         val queueName  = channel.queueDeclare().getQueue() //Actively declare a server-named exclusive, autodelete, non-durable queue
         channel.queueBind(queueName, testExchangeName, "bindingKey")
-        println( "queue name = " + queueName )
 
         val testMessage = "Hey, this is a test message!!!!!!!!!!!!!!!!!!!!!!!"
         var isSuccess = false
@@ -54,17 +48,40 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
         isSuccess should equal (true)
     }
         
-//    "RabbitMQPublisher" should " open a RabbitMQConnection and open a channel by the connect() method" in {
-//        parameters to RabbitMQ API calls should be injected from config??
-//        1: the class holds properties (i.e. getters/setters) for each possible parameter of API calls
-//        2: then each API method call is on the one with most parameters
-//		hmm, but what if API changes? is it testable? can we figure out default values if some contexts want to use methods with fewer arguments??
-//      and that would make a very large class with potentially unnecessary fields -> BAD DESIGN!!! (and worse, getters and setters)
-//      CoC should be the answer -> annotation driven??? force rules (some method/file, etc naming matching)??
+    "RabbitMQPublisher" should " open a RabbitMQConnection by connect() and close it by disconnect()" in {
+        val publisher = new RabbitMQPublisher(factory, testExchangeName)
+        publisher.connect()    //should throw java.io.IOException if failed
+        publisher.disConnect() //should throw java.io.IOException if failed
+    }
     
-//        val publisher = new RabbitMQPublisher(testExchangeName)
-//        
-//    }
+    "RabbitMQPublisher" should " send a message to a single recipient by send()" in {
+        val testPublisherName = "test publisher"
+        val publisher = new RabbitMQPublisher[String](factory, testPublisherName)
+        publisher.connect()
+
+        val connection = factory.newConnection()
+        val channel    = connection.createChannel() //does not specify a channel number -> should be ok for the dafualt behavior
+        val queueName  = channel.queueDeclare().getQueue() //Actively declare a server-named exclusive, autodelete, non-durable queue
+        //neat trick: use RabbitMQ's default exchange which routes message specified by QueueName
+        
+        val testMessage = "test string ring ring"
+        var isSuccess = false
+        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
+            override def handleDelivery(consumerTag : String, envelope : Envelope, properties : BasicProperties, body : Array[Byte]) = {
+                val data = SerializationUtils.deserialize( body )
+                testMessage should equal ( data ) 
+                isSuccess = true
+            }
+        })
+
+        publisher.send(queueName, testMessage)      
+        Thread.sleep(500); //BEEEP!!!!!
+        isSuccess should equal (true)
+        channel.queueDelete( queueName )
+        connection.close()
+        publisher.disConnect()
+    }
+    
 //        def connect()
 //    def disConnect()
 //    def broadcast[T]( data: T )
