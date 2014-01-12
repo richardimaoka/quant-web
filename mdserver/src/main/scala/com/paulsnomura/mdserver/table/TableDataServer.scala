@@ -16,6 +16,7 @@ import akka.actor.Actor
 import akka.actor.actorRef2Scala
 
 abstract class TableDataServer( pKeyName : String ) extends Actor {
+    
 	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]() //current table content
 	var schema     : TableDataSchema = new TableDataSchema( List() )         //current table schema
 
@@ -27,9 +28,9 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
            
     def primaryKeyName = pKeyName
 
-    def callback(clientIdentifier: clientIdentifierType) : Unit = {
-        self ! SendTableDataSchema(clientIdentifier)
-        self ! SendEntireTableData(clientIdentifier)
+    def callback(recipientName: String) : Unit = {
+        self ! SendTableDataSchema(recipientName)
+        self ! SendEntireTableData(recipientName)
     } 
 		
 	private def connect() : Unit = {
@@ -46,7 +47,7 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
     
     override def preStart(): Unit = {
         connect() //both publisher and subscriber connect
-        subscriber.setupCallback( (x : clientIdentifierType) => callback( x ) )
+        subscriber.setupCallback( x => callback( x ) )
         self ! GetAllRecordData 
     } 
 
@@ -74,10 +75,10 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
                     Logger.warn( "{} does not contain the primary key column = {}", SendTableDataRow(map), primaryKeyName )
             }
         }       	    
-        case SendEntireTableData(clientIdentifier) => 
-            publisher.send(clientIdentifier, keyedItems) //do we actually want to convert keyedItems -> list?
-        case SendTableDataSchema( clientIdentifier ) => 
-            publisher.send(clientIdentifier, schema)        
+        case SendEntireTableData(recipientName) => 
+            keyedItems.foreach( row => publisher.send(recipientName, row))
+        case SendTableDataSchema( recipientName ) => 
+            publisher.send(recipientName, schema)        
         case UpdateTableDataSchma( additionalColumnNames ) => {
         	schema = new TableDataSchema( schema.getColumnNames.toList ++ additionalColumnNames )
         	publisher.broadcast(schema)
@@ -93,7 +94,7 @@ object TableDataServer {
     sealed abstract class MessageCase
     case object GetAllRecordData extends MessageCase //sent by the actor to itself on startup   
     case class  SendTableDataRow( map: Map[String, Any] ) extends MessageCase //sent by a listener to forward the table data row to server's clients
-    case class  SendTableDataSchema[T]( clientIdentifier: T ) extends MessageCase //1) @client's startup and 2) when the schema is updated
-    case class  SendEntireTableData[T]( clientIdentifier: T ) extends MessageCase //typically requested by a client on its startup
+    case class  SendTableDataSchema( recipientName: String ) extends MessageCase //1) @client's startup and 2) when the schema is updated
+    case class  SendEntireTableData( recipientName: String ) extends MessageCase //typically requested by a client on its startup
     case class  UpdateTableDataSchma( additionalColumnNames : List[String] ) extends MessageCase 
 }

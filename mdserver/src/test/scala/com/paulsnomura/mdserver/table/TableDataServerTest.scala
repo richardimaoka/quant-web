@@ -92,7 +92,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    server.callback( clientID )
 	    expectMsgAllOf( 1.seconds, SendEntireTableData( clientID ), SendTableDataSchema( clientID ) )
 	    
-	    verify(publisherMock).send(clientID, Map[String, Any]())
+//	    verify(publisherMock).send(clientID, Map[String, Any]())
 //	    verify(publisherMock).send(clientID, new TableDataSchema())
 	    
 	}
@@ -112,7 +112,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    
 	    assert( server.underlyingActor.keyedItems == expectedMap )
 	}
-
+	
 	it should "process UpdateTableDataSchema message appropriately" in {
 	    val publisherMock  = mock(classOf[Publisher])
 	    val subscriberMock = mock(classOf[Subscriber])     

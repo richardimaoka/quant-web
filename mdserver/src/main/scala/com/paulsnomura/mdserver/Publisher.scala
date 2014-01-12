@@ -4,5 +4,5 @@ trait Publisher {
     def connect()
     def disConnect()
     def broadcast[T]( data: T )
-    def send[S, T]( clientIdentifier: S, data : T )
+    def send[T]( recipientName: String, data : T )
 }
