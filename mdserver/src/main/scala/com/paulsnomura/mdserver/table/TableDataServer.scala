@@ -24,7 +24,7 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
 	
     //Dependency Injection
     protected def publisher  : Publisher[TableDataTransmittable]  
-    protected def subscriber : Subscriber
+    protected def subscriber : Subscriber[TableDataTransmittable]
            
     def primaryKeyName = pKeyName
 
