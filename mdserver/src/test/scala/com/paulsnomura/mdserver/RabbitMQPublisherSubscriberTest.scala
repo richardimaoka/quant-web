@@ -22,6 +22,8 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
 	//then call setters on the factory if you need...
     factory.setHost("localhost"); //load from resources file
         
+    //"RabbitMQ should delete queue on connecttion.close" -> yes, already... but do you still want to?
+    
     "RabbitMQ Client API" should "work in this environment" in {
         val connection = factory.newConnection(  ) //does not specify ExecutorService nor broker addresses (hostname/port pairs) 
         val channel    = connection.createChannel( ) //does not specify a channel number -> should be ok for the dafualt behavior
@@ -41,7 +43,6 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
                 isSuccess = true
             }
         })
-        channel.queueDelete(queueName)
         channel.exchangeDelete(testExchangeName)
         connection.close(); //close the connection and its associated channel(s)
         Thread.sleep(500); //BEEEP!!!!!
@@ -50,7 +51,7 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
         
     "RabbitMQPublisher" should " open a RabbitMQConnection by connect() and close it by disconnect()" in {
         val publisher = new RabbitMQPublisher(factory, testExchangeName)
-        publisher.connect()    //should throw java.io.IOException if failed
+        publisher.connect() //should throw java.io.IOException if failed
         publisher.disConnect() //should throw java.io.IOException if failed
     }
     
@@ -64,8 +65,8 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
         var isSuccess  = false
         val subscriber = new RabbitMQSubscriber[String](factory, testPublisherName, message => {
             testMessage should equal (message)
-            isSuccess = true }
-        )
+            isSuccess = true 
+        })
         subscriber.connect()
  
         publisher.send(subscriber.queueName, testMessage)
@@ -77,10 +78,4 @@ class RabbitMQPublisherTest extends FlatSpec with Matchers {
         publisher.disConnect()
         subscriber.disConnect()
     }
-    
-//        def connect()
-//    def disConnect()
-//    def broadcast[T]( data: T )
-//    def send[S, T]( clientIdentifier: S, data : T )
-
 }

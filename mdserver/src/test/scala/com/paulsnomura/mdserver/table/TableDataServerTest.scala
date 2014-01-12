@@ -1,9 +1,7 @@
 package com.paulsnomura.mdserver.table
 
-import scala.annotation.migration
 import scala.concurrent.duration.DurationInt
 
-import org.mockito.Matchers.notNull
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.scalatest.FlatSpecLike

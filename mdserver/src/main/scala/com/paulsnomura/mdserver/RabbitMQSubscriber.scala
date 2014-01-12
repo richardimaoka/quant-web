@@ -7,6 +7,7 @@ import org.apache.commons.lang3.SerializationUtils
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import com.rabbitmq.client.AMQP.BasicProperties
+import com.paulsnomura.utils.ControlStructure.safeResourceFunction
 
 class RabbitMQSubscriber [MessageType <: java.io.Serializable]( connectionFactory : ConnectionFactory, publisherName: String, callBack : MessageType => Unit) 
 extends Subscriber[MessageType]{
@@ -21,25 +22,32 @@ extends Subscriber[MessageType]{
     
     //use try-catch idiom to make it more robust...?
     override def connect() = {
-        //does not specify ExecutorService nor broker addresses (hostname/port pairs)
-        connection  = connectionFactory.newConnection()
-        
-        //does not specify a channel number -> should be ok for the dafualt behavior
-        channel     = connection.createChannel() 
-
-        //declare a non-autodelete exchange with no extra arguments (non-autodelete, since receivers might be up before publisher is up)
-        //parametrize(inject) exchange type?
-        channel.exchangeDeclare(RabbitMQPublisher.exchangeName(publisherName), "fanout")
-        
-        subscriberQueueName = channel.queueDeclare().getQueue()
-        channel.queueBind(queueName, RabbitMQPublisher.exchangeName(publisherName), queueName)
-        
-        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
-            override def handleDelivery(consumerTag : String, envelope : Envelope, properties : BasicProperties, body : Array[Byte]) = {
-                val message = SerializationUtils.deserialize(body).asInstanceOf[SubscribeMessageType]
-                callback(message)
-            }
-        })
+        safeResourceFunction{ 
+	        //does not specify ExecutorService nor broker addresses (hostname/port pairs)
+	        connection  = connectionFactory.newConnection()
+	        
+	        //does not specify a channel number -> should be ok for the dafualt behavior
+	        channel     = connection.createChannel() 
+	
+	        //declare a non-autodelete exchange with no extra arguments (non-autodelete, since receivers might be up before publisher is up)
+	        //parametrize(inject) exchange type?
+	        channel.exchangeDeclare(RabbitMQPublisher.exchangeName(publisherName), "fanout")
+	        
+	        //Actively declare a server-named exclusive, autodelete, non-durable queue.
+	        subscriberQueueName = channel.queueDeclare().getQueue()
+	        channel.queueBind(queueName, RabbitMQPublisher.exchangeName(publisherName), queueName)
+	        
+	        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
+	            override def handleDelivery(consumerTag : String, envelope : Envelope, properties : BasicProperties, body : Array[Byte]) = {
+	                val message = SerializationUtils.deserialize(body).asInstanceOf[SubscribeMessageType]
+	                callback(message)
+	            }
+	        })
+        }
+        //try to close connection on exception, since the queue is auto-delete, not explicitly deleting the queue here
+        { connection.close() } 
+        //if closing connection throws further exception, set these null
+        { channel = null; connection = null }
     }
     
     //use try-catch idiom to make it more robust...?

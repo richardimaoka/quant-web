@@ -4,33 +4,38 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import org.apache.commons.lang3.SerializationUtils
+import com.paulsnomura.utils.ControlStructure.safeResourceFunction
 
 class RabbitMQPublisher[MessageType <: java.io.Serializable]( connectionFactory : ConnectionFactory, publisherName: String ) 
 extends Publisher[MessageType]{
    
-    var connection : Connection = _
-    var channel    : Channel    = _
+    protected var connection : Connection = null
+    protected var channel    : Channel    = null
     
     def broadcastExchangeName = publisherName + ".broadcast"
-    
-    //use try-catch idiom to make it more robust...?
+             
     override def connect() = {
-        //does not specify ExecutorService nor broker addresses (hostname/port pairs)
-        connection  = connectionFactory.newConnection()
-        
-        //does not specify a channel number -> should be ok for the dafualt behavior
-        channel     = connection.createChannel() 
-
-        //declare a non-autodelete exchange with no extra arguments (non-autodelete, since receivers might be up before publisher is up)
-        channel.exchangeDeclare(broadcastExchangeName, "fanout")   
+        safeResourceFunction{ 
+            //does not specify ExecutorService nor broker addresses (hostname/port pairs)
+	        connection = connectionFactory.newConnection()
+	
+	        //does not specify a channel number -> should be ok for the dafualt behavior
+	        channel = connection.createChannel()
+	
+	        //declare a non-autodelete exchange with no extra arguments (non-autodelete, since receivers might be up before publisher is up)
+	        channel.exchangeDeclare(broadcastExchangeName, "fanout")
+        }
+        //try to close connection on exception
+        { connection.close() } 
+        //if closing connection throws further exception, set these null
+        { channel = null; connection = null }
     }
 
-    //use try-catch idiom to make it more robust...?
     override def disConnect() = {
         //Not deleting broadcastExchange intentionally, since clients want to get messages from the same publisher even on publisher's restart        
-
-        //Close this connection and all its channels with the AMQP.REPLY_SUCCESS close code and message 'OK'
-        connection.close()        
+        safeResourceFunction{ if(connection != null) connection.close() }
+        { channel = null; connection = null }
+        {} //no final cleanup
     }
 
     def convertMessageType( message : PublishMessageType ) : Array[Byte] 

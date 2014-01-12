@@ -2,7 +2,7 @@ package com.paulsnomura.mdserver
 
 trait Publisher[MessageType]{
     type PublishMessageType = MessageType
-    
+ 
     def connect()
     def disConnect()
     def broadcast( data: PublishMessageType )
