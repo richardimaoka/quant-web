@@ -10,36 +10,39 @@ import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 
-abstract class TableDataServer( pKeyName : String ) extends Actor {
+abstract class TableDataServer extends Actor {
     val logger = LogManager.getLogger(this.getClass().getName())
     
-	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]() //current table content
-	var schema     : TableDataSchema = new TableDataSchema( List() )         //current table schema
+    def primaryKey : String
+	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]()               //current table content
+	var schema     : TableDataSchema = _//current table schema
 
-    def primaryKeyName = pKeyName
-    
     def broadcast( data : TableDataTransmittable ) : Unit
 
     def send( clientName: String, data : TableDataTransmittable ) : Unit
     
     def clientStartupCallback( clientName : String ) = self ! ClientStartup( clientName )
 
+    override def preStart() : Unit = {
+    	schema =  new TableDataSchema( List(primaryKey), primaryKey )        
+    }
+    
     //To enable compiler warning for non exhaustive match for MessageCase, 
     //Define this as a standalone pattern match rather than partial function on which compiler does not perform non exhaustive check
     def processMessage( msg: MessageCase ): Unit = msg match {
         case SendTableDataRow(map) => {
             logger.info( "{} receivede", SendTableDataRow(map) )
-            map.get(primaryKeyName) match {
-                case Some(primaryKey) => { //If the sent row has the primary key
+            map.get(schema.primaryKey) match {
+                case Some(primaryKeyValue) => { //If the sent row has the primary key
                     val row = new TableDataRow(map)
                     
                     broadcast(row)
                     logger.info( "{} broadcasted", row )
                     
-                    keyedItems += (primaryKey.toString -> row)
+                    keyedItems += (primaryKeyValue.toString -> row)
                 }
                 case None =>
-                    logger.warn( "{} does not contain the primary key column = {}", SendTableDataRow(map), primaryKeyName )
+                    logger.warn( "{} does not contain the primary key column = {}", SendTableDataRow(map), schema.primaryKey )
             }
         }
         case ClientStartup(clientName) => {
@@ -57,7 +60,7 @@ abstract class TableDataServer( pKeyName : String ) extends Actor {
         } 
         case UpdateTableDataSchma( additionalColumnNames ) => {
             logger.info( "Updating table data schema from ... {}", schema )
-        	schema = new TableDataSchema( schema.getColumnNames.toList ++ additionalColumnNames )
+        	schema = new TableDataSchema( schema.getColumnNames.toList ++ additionalColumnNames, schema.primaryKey )
             logger.info( "Updated table data schema to... {}", schema )
         	broadcast(schema)
         }

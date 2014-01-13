@@ -20,8 +20,9 @@ import akka.testkit.TestKit
 /**
  * testActor : when TableDataServerMock send() or broadcast() a message, it sends it back to testActor for testing
  */
-class TableDataServerMock( testActor : ActorRef ) extends TableDataServer("Name") { //primary Key = "Name"
-   
+class TableDataServerMock( testActor : ActorRef ) extends TableDataServer { //primary Key = "Name"
+    override val primaryKey = "Name"
+    
     override def broadcast(data: TableDataTransmittable) =  
         testActor ! ( "broadcast", data ) 
         
@@ -42,7 +43,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
         "Nissan" -> new TableDataRow(Map[String, Any]("Name" -> "Nissan", "Price" -> 102, "Volume" -> 70))
     )
     
-    val sampleSchema =  new TableDataSchema( List( "Name", "Price", "Volume" ) )  
+    val sampleSchema =  new TableDataSchema( List( "Name", "Price", "Volume" ), "Name" )  
     
     "TableDataServer" should "broadcast TableDataRow update" in {
 	    val serverRef = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock(testActor) ) ) 

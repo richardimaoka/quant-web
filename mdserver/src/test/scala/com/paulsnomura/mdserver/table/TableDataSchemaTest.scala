@@ -6,16 +6,16 @@ import org.apache.commons.lang3.SerializationUtils
 class TableDataSchemaTest extends FlatSpec with Matchers {
 
     "TableDataSchema" should " be equal when colmns are equal" in {
-        val schema1 = new TableDataSchema( List( "a", "b" ) )
-        val schema2 = new TableDataSchema( List( "a", "b" ) )
+        val schema1 = new TableDataSchema( List( "a", "b" ), "a" )
+        val schema2 = new TableDataSchema( List( "a", "b" ), "a" )
         
         assert( schema1 == schema2 )
         assert( schema1.hashCode == schema2.hashCode )
     }
 
     it should " NOT be equal when colmns are different" in {       
-        val schema1 = new TableDataSchema( List( "a", "b" ) )
-        val schema2 = new TableDataSchema( List( "a", "bb" ) )
+        val schema1 = new TableDataSchema( List( "a", "b" ), "a" )
+        val schema2 = new TableDataSchema( List( "a", "bb" ), "a" )
         
         assert( schema1 != schema2 )
         assert( schema1.hashCode != schema2.hashCode )

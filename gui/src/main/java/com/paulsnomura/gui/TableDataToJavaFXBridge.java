@@ -24,6 +24,7 @@ public class TableDataToJavaFXBridge {
 	//Not actually, since "Requests into a Channel are serialized, with *ONLY ONE THREAD* running commands at a time" as in 
 	//http://www.rabbitmq.com/releases/rabbitmq-java-client/current-javadoc/com/rabbitmq/client/Channel.html
 	private Map<String, TableDataRow> tableData = new HashMap<String, TableDataRow>();
+	private String primaryKey = "";
 
 	TableColumn<TableDataRow, Object> getColumn(TableView<TableDataRow> tableView, final String columnName) {
 	    TableColumn<TableDataRow, Object> column = new TableColumn<TableDataRow, Object>();
@@ -41,7 +42,7 @@ public class TableDataToJavaFXBridge {
 	public void processTableData(final TableView<TableDataRow> tableView, Object data){	
 		if( data instanceof TableDataSchema ){
 			TableDataSchema schema = (TableDataSchema) data;
-			
+			primaryKey = schema.primaryKey();
 			final ArrayList<TableColumn<TableDataRow, Object>> updatedColumns = new ArrayList<TableColumn<TableDataRow, Object>>();
 			
 			for (scala.collection.Iterator<TableDataColumn> iterator = schema.getColumns().iterator(); iterator.hasNext();)
@@ -57,7 +58,7 @@ public class TableDataToJavaFXBridge {
 		}
 		else if( data instanceof TableDataRow ){
 			TableDataRow row = (TableDataRow) data;
-			tableData.put(row.getValue("AssetName").toString(), row);       		
+			tableData.put(row.getValue(primaryKey).toString(), row);       		
 			ObservableList<TableDataRow> list = FXCollections.observableArrayList( tableData.values() );
 			tableView.setItems(list);
 		}
