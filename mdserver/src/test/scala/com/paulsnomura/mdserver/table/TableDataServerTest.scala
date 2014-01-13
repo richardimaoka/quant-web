@@ -137,5 +137,17 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    assert( expectedMap == server.keyedItems )
 	}
 
+	it should "merge results for the same p-key" in {
+	    val serverRef = TestActorRef[TableDataServerMock]( Props( new TableDataServerMock(testActor) ) )
+	    val server    = serverRef.underlyingActor 	    
+	 
+	    server.processMessage( new SendTableDataRow( Map[String, Any]("Name" -> "Toyota", "Price" -> 200, "Volume" -> 50) ) )
+	    server.processMessage( new SendTableDataRow( Map[String, Any]("Name" -> "Toyota", "High"  -> 300, "Low"    -> 20) ) )
+	
+	    server.keyedItems.get("Toyota") match {
+	        case Some(row) => assert( row == new TableDataRow(Map[String, Any]("Name" -> "Toyota", "Price" -> 200, "Volume" -> 50, "High"  -> 300, "Low"    -> 20) ) )
+	        case None => throw new Exception( "Toyota not found!!!" )
+	    }
+	}
 	
 }

@@ -34,12 +34,17 @@ abstract class TableDataServer extends Actor {
             logger.info( "{} receivede", SendTableDataRow(map) )
             map.get(schema.primaryKey) match {
                 case Some(primaryKeyValue) => { //If the sent row has the primary key
-                    val row = new TableDataRow(map)
                     
+                    //Merge results
+                    val row = keyedItems.get( primaryKeyValue.toString ) match {
+                        case Some( existingRow ) => new TableDataRow( existingRow.map ++ map )
+                        case None => new TableDataRow( map )
+                    }
+                                       
+                    keyedItems += (primaryKeyValue.toString -> row)
                     broadcast(row)
                     logger.info( "{} broadcasted", row )
                     
-                    keyedItems += (primaryKeyValue.toString -> row)
                 }
                 case None =>
                     logger.warn( "{} does not contain the primary key column = {}", SendTableDataRow(map), schema.primaryKey )
