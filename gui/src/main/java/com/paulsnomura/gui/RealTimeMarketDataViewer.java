@@ -55,6 +55,7 @@ public class RealTimeMarketDataViewer extends Application {
 		String serverBroadCastExchangeName = serverName + ".broadcastExchange"; 
 		
 		channel.basicPublish( "", serverQueueName, null, queueName.getBytes() );
+        channel.exchangeDeclare(serverBroadCastExchangeName, "fanout");
 		channel.queueBind(queueName, serverBroadCastExchangeName, "");
 		System.out.println( "Send MD Server this client's start-up message" );			
 	}
