@@ -1,0 +1,23 @@
+@(implicit request: RequestHeader)
+
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>test</title>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+        <script src="@routes.Assets.at("javascripts/app.js")" type="text/javascript"></script>
+    </head>
+    <body ng-app="realtimeTable">
+    <div  ng-controller="tableController" >
+    <table class="table">
+	    <tr ng-repeat="user in aaa">
+	        <td ng-repeat="(k,v) in user">{{k}}{{v}}</td>
+	    </tr>
+    </table>
+    </div>
+    hello
+    <span id="message"></span>
+    </body>
+</html>
