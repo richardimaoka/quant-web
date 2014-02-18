@@ -21,3 +21,9 @@ class TableDataRow(fieldsAndValues: Map[String, Any]) extends TableDataTransmitt
     }
     
 }
+
+class TableDataRowNew private( fieldMap : Map[String, TableDataField] )
+
+object TableDataRowNew {
+    def apply( fields : ( String, TableDataField )* ) = new TableDataRowNew( fields.toMap )
+}

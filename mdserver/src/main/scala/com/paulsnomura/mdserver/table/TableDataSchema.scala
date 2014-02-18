@@ -22,3 +22,19 @@ class TableDataSchema (columnNames : List[String], pKey: String) extends TableDa
     
     override def toString = "[TableDataScema]: (pkey = " + primaryKey + "): " +getColumns
 }
+
+//extend this in an *object* like below TableDataSchemaNewSample
+trait TableDataSchemaNew{
+    def getColumns : List[TableDataColumnNew]
+}
+
+//object!!(not class) so that you can access to fields like TableDataSchemaNewSample.name
+object TableDataSchemaNewSample extends TableDataSchemaNew{
+    //List up columns here with val
+    val name    = TableDataStringColumn( "name" )
+    val height  = TableDataDoubleColumn( "height" )
+    val age     = TableDataIntegerColumn( "age" )   
+    
+   //return all the columns defined above
+    override def getColumns = List( name, height, age )
+}
