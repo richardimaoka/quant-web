@@ -4,50 +4,37 @@ import org.apache.logging.log4j.LogManager
 import com.paulsnomura.mdserver.table.TableDataServer.ClientStartup
 import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataSchema
 import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
-import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
+import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataRow
 import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataSchma
 import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
 import akka.actor.Actor
 import akka.actor.actorRef2Scala
 
-abstract class TableDataServer extends Actor {
+abstract class TableDataServer (initialSchema: TableDataSchema) extends Actor {
     val logger = LogManager.getLogger(this.getClass().getName())
     
-    def primaryKey : String
-	var keyedItems : Map[String, TableDataRow] = Map[String, TableDataRow]()               //current table content
-	var schema     : TableDataSchema = _//current table schema
+    var tableData  : Map[String, TableDataRow] = Map[String, TableDataRow]() //current table content
+	var schema     : TableDataSchema = initialSchema
 
-    def broadcast( data : TableDataTransmittable ) : Unit
-
-    def send( clientName: String, data : TableDataTransmittable ) : Unit
-    
-    def clientStartupCallback( clientName : String ) = self ! ClientStartup( clientName )
-
-    override def preStart() : Unit = {
-    	schema =  new TableDataSchema( List(primaryKey), primaryKey )        
-    }
+    def broadcast( schema : TableDataSchema ) : Unit
+    def broadcast( schema : TableDataRow ) : Unit
+    def send( clientName: String, schma : TableDataSchema ) : Unit
+    def send( clientName: String, row   : TableDataRow )    : Unit
     
     //To enable compiler warning for non exhaustive match for MessageCase, 
     //Define this as a standalone pattern match rather than partial function on which compiler does not perform non exhaustive check
     def processMessage( msg: MessageCase ): Unit = msg match {
-        case SendTableDataRow(map) => {
-            logger.info( "{} receivede", SendTableDataRow(map) )
-            map.get(schema.primaryKey) match {
-                case Some(primaryKeyValue) => { //If the sent row has the primary key
-                    
-                    //Merge results
-                    val row = keyedItems.get( primaryKeyValue.toString ) match {
-                        case Some( existingRow ) => new TableDataRow( existingRow.map ++ map )
-                        case None => new TableDataRow( map )
-                    }
-                                       
-                    keyedItems += (primaryKeyValue.toString -> row)
+        case UpdateTableDataRow( row ) => {
+            logger.info( "{} received", UpdateTableDataRow( row ) )
+            row getPrimaryKeyField( schema ) match {
+                case Some( primaryKeyField ) => { //If the sent row has the primary key
+                    //Merge results                                     
+                    tableData += (primaryKeyField.valueString -> row)
                     broadcast(row)
                     logger.info( "{} broadcasted", row )
-                    
                 }
                 case None =>
-                    logger.warn( "{} does not contain the primary key column = {}", SendTableDataRow(map), schema.primaryKey )
+                    logger.warn( "UpdateTableDataRow({}) does not contain the primary key column = {}", row, schema.primaryKey )
             }
         }
         case ClientStartup(clientName) => {
@@ -57,17 +44,23 @@ abstract class TableDataServer extends Actor {
         }            
         case SendEntireTableData(clientName) => {
             logger.info( "Send entire table data to client = {}", clientName )
-            keyedItems.values.foreach( row => send(clientName, row))
+            tableData.values.foreach( row => send(clientName, row))
         } 
         case SendTableDataSchema( clientName ) => {
             logger.info( "Send table data schema {} to client = {}", schema, clientName )
             send(clientName, schema)        
         } 
-        case UpdateTableDataSchma( additionalColumnNames ) => {
-            logger.info( "Updating table data schema from ... {}", schema )
-        	schema = new TableDataSchema( schema.getColumnNames.toList ++ additionalColumnNames, schema.primaryKey )
-            logger.info( "Updated table data schema to... {}", schema )
-        	broadcast(schema)
+        case UpdateTableDataSchma( newSchema ) => {
+            if( schema.primaryKey != newSchema.primaryKey ){
+	            logger.warn( "Received table data schema = {}", newSchema )                
+	            logger.warn( "New schema has the primary key = {}, although current schema's key = {}. They have to be consistent to preserve the table data model, so ignoring the schema update.", newSchema.primaryKey, schema.primaryKey )                
+            }
+            else{
+	            logger.info( "Updating table data schema from ... {}", schema )
+	        	schema = newSchema
+	            logger.info( "Updated table data schema to... {}", schema )
+	        	broadcast(schema)               
+            }
         }
     }
     
@@ -77,9 +70,9 @@ abstract class TableDataServer extends Actor {
 object TableDataServer {
  
     sealed abstract class MessageCase
-    case class  SendTableDataRow( map: Map[String, Any] ) extends MessageCase //sent by a listener to forward the table data row to server's clients
     case class  ClientStartup( clientName : String )      extends MessageCase //when client starts up, it sends this message to the server
     case class  SendTableDataSchema( clientName: String ) extends MessageCase //when client requests to send the schema 
     case class  SendEntireTableData( clientName: String ) extends MessageCase //when client requests to send the entire data
-    case class  UpdateTableDataSchma( additionalColumnNames : List[String] ) extends MessageCase 
+    case class  UpdateTableDataRow( row: TableDataRow ) extends MessageCase  //sent by a listener to forward the table data row to server's clients
+    case class  UpdateTableDataSchma( newSchema : TableDataSchema ) extends MessageCase 
 }

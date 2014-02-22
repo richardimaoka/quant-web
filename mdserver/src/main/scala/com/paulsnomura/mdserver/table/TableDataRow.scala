@@ -2,28 +2,26 @@ package com.paulsnomura.mdserver.table
 
 import scala.collection.immutable.Map
 
-class TableDataRow(fieldsAndValues: Map[String, Any]) extends TableDataTransmittable {
-
-    def map = fieldsAndValues
+case class TableDataRow private( fieldMap : Map[String, TableDataField] ) extends Serializable{
+    def getPrimaryKeyField( schema : TableDataSchema ) : Option[TableDataField] = fieldMap get ( schema.primaryKey.columnName ) 
     
-    def getValue(fieldName: String) = fieldsAndValues.getOrElse(fieldName, "")
-
-    override def toString = "[TableDataRow]: " + fieldsAndValues.toString
-
-
-    def canEqual(other: Any): Boolean = other.isInstanceOf[TableDataRow] 
+    //to preserve concrete return type information, define getValue for each column type 
+    def getValue( column : TableDataDoubleColumn ) : Option[Double] = fieldMap get( column.columnName ) match { 
+    	case Some( TableDataDoubleField( value ) ) => Some( value ) 
+        case _ => None
+	}
     
-    override def hashCode: Int = map.hashCode
+    def getValue( column : TableDataIntegerColumn ) : Option[Integer] = fieldMap get( column.columnName ) match { 
+    	case Some( TableDataIntegerField( value ) ) => Some( value ) 
+        case _ => None
+	}
 
-    override def equals(other: Any): Boolean = other match {
-        case that: TableDataRow => ( that canEqual this ) && that.map == this.map
-        case _ => false
-    }
-    
+    def getValue( column : TableDataStringColumn ) : Option[String] = fieldMap get( column.columnName ) match { 
+    	case Some( TableDataStringField( value ) ) => Some( value ) 
+        case _ => None
+	}    
 }
 
-class TableDataRowNew private( fieldMap : Map[String, TableDataField] )
-
-object TableDataRowNew {
-    def apply( fields : ( String, TableDataField )* ) = new TableDataRowNew( fields.toMap )
+object TableDataRow {    
+    def apply( fields : ( String, TableDataField )* ) = new TableDataRow( fields.toMap )   
 }

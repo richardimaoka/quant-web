@@ -1,11 +1,13 @@
 package com.paulsnomura.mdserver
 
 import com.paulsnomura.mdserver.table.TableDataServer
-import com.paulsnomura.mdserver.table.TableDataTransmittable
+import com.paulsnomura.mdserver.table.TableDataRow
+import com.paulsnomura.mdserver.table.TableDataSchema
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Connection
 import com.paulsnomura.utils.ControlStructure.safeResourceFunction
-import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataRow
+import com.paulsnomura.mdserver.table.TableDataServer.ClientStartup
+import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataRow
 import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataSchma
 import org.apache.commons.lang3.SerializationUtils
 import com.rabbitmq.client.ConnectionFactory
@@ -16,13 +18,14 @@ import com.rabbitmq.client.AMQP.BasicProperties
 import scala.util.Random
 import akka.actor.ActorSystem
 import akka.actor.Props
+import com.paulsnomura.mdserver.table.schema.SimpleStockSchema
+import java.lang.Thread
 
 
 //Inject serverInstanceName???
 //Inject primaryKeyName?
-class MarketDataServerRabbitMQ( serverInstanceName: String ) extends TableDataServer{
-	override val primaryKey = "AssetName"
-    
+class MarketDataServerRabbitMQ( serverInstanceName: String, initialSchema: TableDataSchema ) extends TableDataServer(initialSchema){
+	
     protected var connection : Connection = null
     protected var channel    : Channel    = null
     
@@ -49,11 +52,12 @@ class MarketDataServerRabbitMQ( serverInstanceName: String ) extends TableDataSe
 
         //declare a queue with serverQueueName, non-durable, non-exclusive (not limited to this connection), non-autoDelete
         channel.queueDeclare(serverQueueName, false, false, false, null)
+        
         //consumer with autoAck = true
         channel.basicConsume(serverQueueName, true, new DefaultConsumer(channel) {
             override def handleDelivery(consumerTag: String, envelope: Envelope, properties: BasicProperties, body: Array[Byte]) = {
                 val clientName = new String(body)
-                clientStartupCallback(clientName)
+                self ! ClientStartup(clientName)
             }
         })
 
@@ -78,18 +82,33 @@ class MarketDataServerRabbitMQ( serverInstanceName: String ) extends TableDataSe
         disConnect()
     }
 
-    override def broadcast(data: TableDataTransmittable): Unit = {
-        logger.info( "broadcast() data = {}", data )
-        val body = SerializationUtils.serialize(data)
+    override def broadcast(schema: TableDataSchema): Unit = {
+        logger.info( "broadcast() schema = {}", schema )
+        val body = SerializationUtils.serialize(schema)
+        channel.basicPublish(broadcastExchangeName, "", null, body)        
+    }
+    
+    override def broadcast(row: TableDataRow): Unit = {
+        logger.info( "broadcast() row = {}", row )
+        val body = SerializationUtils.serialize(row)
         channel.basicPublish(broadcastExchangeName, "", null, body)        
     }
     
     /*
      * For RabbitMQ, clientName is queueName
      */
-    override def send( clientQueueName: String, data: TableDataTransmittable ) = {
-        logger.info( "send() data = {} to client = {}", data, clientQueueName )
-        val body = SerializationUtils.serialize(data)
+    override def send( clientQueueName: String, schema: TableDataSchema ) = {
+        logger.info( "send() schema = {} to client = {}", schema, clientQueueName )
+        val body = SerializationUtils.serialize(schema)
+        
+        //neat trick: the 1st parameter = "" means it uses Rabbit MQ's default (a.k.a. nameless) exchange
+        //the default exchange uses queueName as the routingKey (i.e. second param of this method)
+        channel.basicPublish(""/*default(nameless) exchange*/, clientQueueName, null, body )        
+    }
+    
+    override def send( clientQueueName: String, row: TableDataRow ) = {
+        logger.info( "send() row = {} to client = {}", row, clientQueueName )
+        val body = SerializationUtils.serialize(row)
         
         //neat trick: the 1st parameter = "" means it uses Rabbit MQ's default (a.k.a. nameless) exchange
         //the default exchange uses queueName as the routingKey (i.e. second param of this method)
@@ -108,20 +127,25 @@ object MarketDataServerRabbitMQ{
 	
 	
 	def main(args: Array[String]) {
+	    val schema = SimpleStockSchema
+	    
         val stockNames = List("Toyota", "Honda", "Nissan")
 
         val rnd = new Random
 
         val mdServerActorRef = ActorSystem("MarketDataServer").actorOf(
-        		Props(new MarketDataServerRabbitMQ( mainInstance )), 
+        		Props(new MarketDataServerRabbitMQ( mainInstance, schema )), 
                 mainInstance)
  
-        mdServerActorRef ! UpdateTableDataSchma( List( "AssetName", "Price", "Volume", "Comment" ) )
-                
 		while (true) {
 			stockNames.foreach( stockName => {
-			    mdServerActorRef ! SendTableDataRow( Map( "AssetName" -> stockName, "Price" -> rnd.nextDouble, "Volume" -> rnd.nextDouble ))
-			})
+			    val row = TableDataRow( 
+			    		schema.name(stockName), 
+			    		schema.price(rnd.nextDouble), 
+			    		schema.volume(rnd.nextDouble) )
+
+			    mdServerActorRef ! UpdateTableDataRow( row )
+			} )
 			
 			Thread.sleep(1000)
 		}

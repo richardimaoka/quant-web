@@ -5,23 +5,21 @@ import org.apache.commons.lang3.SerializationUtils
 
 class TableColumnTest extends FlatSpec with Matchers {
 
-    "TableDataColumn" should " be equal when colmnName is equal" in {
-        val a1 = new TableDataColumn( "a" )
-        val a2 = new TableDataColumn( "a" )       
-        assert( a1 == a2 )
-    }
-
-    it should " NOT be equal when colmnName is different" in {
-        val a = new TableDataColumn( "a" )
-        val b = new TableDataColumn( "b" )
-        
-        assert( a != b )
+    "TableDataColumnNew" should "create [String,TableDataField] with apply() method" in {
+        assert( TableDataStringColumn( "dummy" )( "woah" ) == ( "dummy", TableDataStringField( "woah" ) ) )
+        assert( TableDataIntegerColumn( "dummy" )( 5 )     == ( "dummy", TableDataIntegerField( 5 ) ) )
+        assert( TableDataDoubleColumn( "dummy" )( 5 ).isInstanceOf[(String,TableDataDoubleField)] )
     }
     
-    it should " be restored from getBytes" in {
-        val originalColumn = new TableDataColumn( "a" )
-        val restoredColumn = SerializationUtils.deserialize( originalColumn.getBytes )
-
-        assert( originalColumn == restoredColumn )      
+    "TableDataColumnNew" should "returns column name by columnName() method" in {
+        assert( TableDataStringColumn( "dummy" ).columnName  == "dummy" )
+        assert( TableDataIntegerColumn( "dummy" ).columnName == "dummy" )
+        assert( TableDataDoubleColumn( "dummy" ).columnName  == "dummy" )
+    }
+    
+    it should " be restored from SerializationUtils.serialize()/deserialize()" in {
+         val original = TableDataStringColumn("a")
+         assert( original ==  SerializationUtils.deserialize( SerializationUtils.serialize(original) ) )
     } 
+    
 }
