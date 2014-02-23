@@ -30,8 +30,10 @@ class TimerActor extends Actor {
 
         case UpdateTime() => {           
             val data     = Map( "a" -> 10, "b" -> "whee", "c" -> Calendar.getInstance().getTime().toString() )
-//            val jsonData = data map ( _ ) 
-            channel push ""
+//            val jsonData = data map ( _ )
+//            Js
+            channel push Calendar.getInstance().getTime().toString()//data.toString
+            println( data )
         }
 
     }

@@ -29,7 +29,12 @@ object Application extends Controller {
         Ok(views.html.show(request))
     }
 
-    def ignite = WebSocket.async[String] { implicit request =>
+    def timer = Action {
+    	implicit request =>
+        Ok(views.html.timer(request))
+    }
+    
+    def timerWebSocket = WebSocket.async[String] { implicit request =>
         val enumeratorFuture = timerActor ? GetEnumerator()
         val in = Iteratee.ignore[String]       
         enumeratorFuture.mapTo[Enumerator[String]].map( enumerator => (in, enumerator) )
