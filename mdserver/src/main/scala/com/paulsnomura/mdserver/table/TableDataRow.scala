@@ -3,6 +3,8 @@ package com.paulsnomura.mdserver.table
 import scala.collection.immutable.Map
 
 case class TableDataRow private( fieldMap : Map[String, TableDataField] ) extends Serializable{
+    def toMap = fieldMap
+    
     def getPrimaryKeyField( schema : TableDataSchema ) : Option[TableDataField] = fieldMap get ( schema.primaryKey.columnName ) 
     
     //to preserve concrete return type information, define getValue for each column type 

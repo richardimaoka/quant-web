@@ -11,7 +11,5 @@
         console.log($scope.t)
     )
     
-    $scope.t = 10
-        
-    #startWS() 
+    $scope.t = 10 
  )

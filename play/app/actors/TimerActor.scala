@@ -1,14 +1,17 @@
 package actors
 
-import play.api.libs.json._
-import play.api.libs.json.Json._
-import akka.actor.Actor
-import play.api.libs.iteratee.{ Concurrent, Enumerator }
-import play.api.libs.iteratee.Concurrent.Channel
-import play.api.Logger
-import play.api.libs.concurrent.Execution.Implicits._
-import scala.concurrent.duration._
 import java.util.Calendar
+import scala.concurrent.duration._
+import com.paulsnomura.mdserver.table.TableDataRow
+import com.paulsnomura.mdserver.table.schema.SampleSchema
+import akka.actor.Actor
+import play.api.libs.concurrent.Execution.Implicits._
+import play.api.libs.iteratee.Concurrent
+import play.api.libs.iteratee.Concurrent.Channel
+import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.Json
+import utils.JsonConverter._
+import play.api.libs.json.JsValue
 
 /**
  * User: Luigi Antonini
@@ -20,7 +23,7 @@ class TimerActor extends Actor {
     // crate a scheduler to send a message to this actor every socket
     val cancellable = context.system.scheduler.schedule(0 second, 1 second, self, UpdateTime())
 
-    val (enumerator, channel) = Concurrent.broadcast[String] 
+    val (enumerator, channel) = Concurrent.broadcast[JsValue] 
 
     override def receive = {
 
@@ -29,16 +32,12 @@ class TimerActor extends Actor {
         }
 
         case UpdateTime() => {           
-            val data     = Map( "a" -> 10, "b" -> "whee", "c" -> Calendar.getInstance().getTime().toString() )
-//            val jsonData = data map ( _ )
-//            Js
-            channel push Calendar.getInstance().getTime().toString()//data.toString
-            println( data )
+            val time = Calendar.getInstance().getTime().toString()
+            val row  = TableDataRow( SampleSchema.name("Burnables" + time.toString ), SampleSchema.age(25), SampleSchema.height(125) )
+            channel push Json.toJson(row) 
+            println( row )
         }
-
     }
-
-
 }
 
 sealed trait SocketMessage
