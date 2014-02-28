@@ -4,7 +4,7 @@ lazy val mdserver = project in( file("mdserver") )
 
 lazy val gui = project in( file("gui") ) dependsOn( mdserver )
 
-lazy val play = project in( file("play") ) dependsOn( mdserver )
+lazy val playweb = project in( file("play") ) dependsOn( mdserver )
 
 EclipseKeys.withSource := true
 

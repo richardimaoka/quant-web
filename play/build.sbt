@@ -8,7 +8,6 @@ libraryDependencies ++= Seq(
   jdbc,
   anorm,
   cache,
-  "org.scala-lang" %% "scala-pickling" % "0.8.0-SNAPSHOT",
   "org.scalatest" %% "scalatest" % "2.0" % "test" withSources() withJavadoc()
 )     
 

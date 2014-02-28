@@ -8,7 +8,9 @@
     #Since webSocket.onmessage callback is called outside the Angular Framework, you need $apply to reflect the change in the view 
     webSocket.onmessage = (msg) -> $scope.$apply(
         $scope.t = msg.data
+        $scope.tt = JSON.parse( msg.data )
         console.log($scope.t)
+        console.log($scope.tt)
     )
     
     $scope.t = 10 
