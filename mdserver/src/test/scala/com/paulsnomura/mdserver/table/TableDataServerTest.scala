@@ -43,13 +43,13 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
     }
     /**
      * testActor : when TableDataServerMock send() or broadcast() a message, it sends it back to testActor for testing
+     * you can't do sender ! xyz since sender is not always testActer (i.e.) TableDataServer sends a message to itself for certain cases 
      */
     class TableDataServerMock(testActor: ActorRef) extends TableDataServer(SampleSchema) { //primary Key = "Name"
         override def broadcast(schema: TableDataSchema) = testActor ! ("broadcast", schema)
-        override def broadcast(row: TableDataRow) = testActor ! ("broadcast", row)
-
+        override def broadcast(row: TableDataRow)       = testActor ! ("broadcast", row)
         override def send(clientName: String, schema: TableDataSchema) = testActor ! ("send", clientName, schema)
-        override def send(clientName: String, row: TableDataRow) = testActor ! ("send", clientName, row)
+        override def send(clientName: String, row: TableDataRow)       = testActor ! ("send", clientName, row)
     }
 
     
