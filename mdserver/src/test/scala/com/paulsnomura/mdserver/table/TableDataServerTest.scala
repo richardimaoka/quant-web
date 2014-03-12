@@ -1,15 +1,15 @@
 package com.paulsnomura.mdserver.table
 
 import scala.concurrent.duration.DurationInt
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
+
 import org.scalatest.FlatSpecLike
-import com.paulsnomura.mdserver.table.TableDataServer.MessageCase
+
 import com.paulsnomura.mdserver.table.TableDataServer.ClientStartup
 import com.paulsnomura.mdserver.table.TableDataServer.SendEntireTableData
 import com.paulsnomura.mdserver.table.TableDataServer.SendTableDataSchema
-import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataSchma
 import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataRow
+import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataSchma
+
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props

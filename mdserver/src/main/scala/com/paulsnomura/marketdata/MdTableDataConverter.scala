@@ -9,26 +9,22 @@ import com.paulsnomura.mdserver.table.schema.SimpleStockSchema
 import akka.actor.Actor
 import akka.actor.ActorRef
 import scala.util.Random
+import akka.actor.Cancellable
+import scala.concurrent.ExecutionContext
+import akka.actor.Scheduler
 
-trait DummyDataSender{
-    self : Actor => //Self type annotation - this trait must be mixed into Actor 
-    
-    val name : String //you need to override the name when mixing this trait into your Actor
-    
-	implicit val ec = context.dispatcher
-    
-	val rnd = new Random
-    def randomMarketData() = SimpleStockData( name, rnd.nextDouble, rnd.nextDouble )   	
-    
-    val cancellable = context.system.scheduler.schedule(0.second, 1.second, self, randomMarketData())    
-}
-
-class MdTableDataConverter(tableDataServerRef : ActorRef) extends Actor{
-
+class MdTableDataConverter(
+    val subscriber : MarketDataSubscriber,    
+    tableDataServerRef : ActorRef
+) 
+extends Actor{
 	val logger = LogManager.getLogger(this.getClass().getName())
     
 	val schema = SimpleStockSchema
     
+	override def preStart() = subscriber.subscribe() 
+	override def postStop() = subscriber.unsubscribe() 
+
 	override def receive = {
 		case marketData : SimpleStockData => {
 			val row = TableDataRow(
@@ -41,7 +37,33 @@ class MdTableDataConverter(tableDataServerRef : ActorRef) extends Actor{
 		    tableDataServerRef ! row
 		}
 		case message  => {
-		    logger.warn("Skipped Unexpected Message {}", message.toString ) 
+		    logger.warn("Skipped unexpected message {}", message.toString ) 
 		}
 	}
+}
+
+
+class DummyDataGenerator( name: String, tableDataServerRef: ActorRef ) 
+extends MdTableDataConverter( null, tableDataServerRef ){
+
+    implicit val ec = context.dispatcher
+    val scheduler   = context.system.scheduler
+    
+	class DummyDataSubscriber( name: String ) extends MarketDataSubscriber{
+		val rnd = new Random
+		def randomMarketData() = SimpleStockData( name, rnd.nextDouble, rnd.nextDouble )
+				
+		var cancellable : Cancellable = _
+		
+		override def subscribe() = {
+			cancellable = scheduler.schedule(0.second, 1.second)( self ! randomMarketData() )
+		}
+		
+		override def unsubscribe() = {
+			if( cancellable != null )
+				cancellable.cancel()
+		}           
+	}
+    
+    override val subscriber = new DummyDataSubscriber( name )    
 }
