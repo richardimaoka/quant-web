@@ -21,17 +21,17 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
  
     val schema  = SimpleStockSchema
     
-    class MockConverter( mockSubscriber: MarketDataSubscriber ) extends MdTableDataConverter with MarketDataSubscriberComponent{ 
+    class MockConverter( mockSubscriber: Subscriber ) extends MdTableDataConverter with SubscriberComponent{ 
         override val tableDataServerRef = testActor 
         override val subscriber = mockSubscriber 
     }
     
-    class DummyConverter( override val name: String ) extends MdTableDataConverter with MarketDataSubscriberDummyComponent{ 
+    class DummyConverter( override val name: String ) extends MdTableDataConverter with MdSubscriberComponentDummy{ 
         override val tableDataServerRef = testActor
     } 
       
    "MdTableDataConverter" should "receive the market data and publish TableDataRow" in {
-   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mock(classOf[MarketDataSubscriber])) )  )
+   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mock(classOf[Subscriber])) )  )
    	    val marketData     = SimpleStockData( "Toyota", 100.0, 50 )
    	    val tableData      = TableDataRow(schema.name("Toyota"), schema.price(100), schema.volume(50))   	    
    	    converterRef ! marketData
@@ -39,7 +39,7 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
    }
     
    it should "call subscribe() and unsubscribe() on startup and stop" in {
-        val mockSubscriber = mock(classOf[MarketDataSubscriber])
+        val mockSubscriber = mock(classOf[Subscriber])
    	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mockSubscriber) ) )
    	    converterRef.start()
         verify(mockSubscriber).subscribe()
@@ -55,14 +55,18 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
         
    }
    
-   "DummyDataGenerator trait" should "auto generate data periodically" in {
+   "MdSubscriberDummy" should "auto generate data periodically" in {
    	   val converterRef = TestActorRef[DummyConverter]( Props( new DummyConverter("dummyName") ) ) 
-   	   
-   	   //It should receive periodical updates multiple times
-   	   assert( expectMsgType[TableDataRow]( 1.seconds ).getValue(schema.name).getOrElse("") ==  "dummyName" ) 
-   	   assert( expectMsgType[TableDataRow]( 1.seconds ).getValue(schema.name).getOrElse("") ==  "dummyName" ) 
-   	   assert( expectMsgType[TableDataRow]( 1.seconds ).getValue(schema.name).getOrElse("") ==  "dummyName" ) 
-   	   converterRef.stop()
+
+   	   try{
+		   //It should receive periodical updates multiple times
+		   assert( expectMsgType[TableDataRow]( 2.seconds ).getValue(schema.name).getOrElse("") ==  "dummyName" ) 
+		   assert( expectMsgType[TableDataRow]( 2.seconds ).getValue(schema.name).getOrElse("") ==  "dummyName" ) 
+		   assert( expectMsgType[TableDataRow]( 2.seconds ).getValue(schema.name).getOrElse("") ==  "dummyName" ) 
+   	   }
+	   finally{
+	   	   converterRef.stop()
+	   }
    }
 
    //"MdTableDataConverter" should "register itself to market data update on preStart()" in {}

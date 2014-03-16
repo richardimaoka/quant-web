@@ -9,7 +9,7 @@ import akka.actor.Actor
 import akka.actor.Cancellable
 import akka.actor.actorRef2Scala
 
-trait  MarketDataSubscriberDummyComponent extends MarketDataSubscriberComponent{ 
+trait MdSubscriberComponentDummy extends SubscriberComponent { 
 	self: Actor => 
 
     def name: String
@@ -17,12 +17,12 @@ trait  MarketDataSubscriberDummyComponent extends MarketDataSubscriberComponent{
     implicit val ec = context.dispatcher
     val scheduler   = context.system.scheduler
     
-    override val subscriber = new MarketDataSubscriberDummy( name )    
+    override val subscriber = new MdSubscriberDummy( name )    
 
     /**
      * name: by-name parameter to avoid issues in the order of initialization
      */
-    class MarketDataSubscriberDummy( name: => String ) extends MarketDataSubscriber{
+    class MdSubscriberDummy( name: => String ) extends Subscriber{
 		val rnd = new Random
 		def randomMarketData() = SimpleStockData( name, rnd.nextDouble, rnd.nextDouble )
 				

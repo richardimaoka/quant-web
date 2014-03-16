@@ -11,7 +11,7 @@ import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
 
 trait MdTableDataConverter extends Actor{
-    self: MarketDataSubscriberComponent => 
+    self: SubscriberComponent => 
     
     val tableDataServerRef : ActorRef
     
