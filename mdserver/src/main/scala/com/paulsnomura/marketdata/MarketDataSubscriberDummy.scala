@@ -19,7 +19,10 @@ trait  MarketDataSubscriberDummyComponent extends MarketDataSubscriberComponent{
     
     override val subscriber = new MarketDataSubscriberDummy( name )    
 
-    class MarketDataSubscriberDummy( name: String ) extends MarketDataSubscriber{
+    /**
+     * name: by-name parameter to avoid issues in the order of initialization
+     */
+    class MarketDataSubscriberDummy( name: => String ) extends MarketDataSubscriber{
 		val rnd = new Random
 		def randomMarketData() = SimpleStockData( name, rnd.nextDouble, rnd.nextDouble )
 				

@@ -3,9 +3,8 @@ package com.paulsnomura.marketdata
 import scala.concurrent.duration.DurationInt
 
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.verify
 import org.mockito.Mockito.times
-import org.scalatest.Finders
+import org.mockito.Mockito.verify
 import org.scalatest.FlatSpecLike
 
 import com.paulsnomura.marketdata.api.SimpleStockData
@@ -18,7 +17,7 @@ import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 
 class MdTableDataConverterTest 
-extends TestKit(ActorSystem("MdTableDataConverteTest")) with FlatSpecLike {
+extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
  
     val schema  = SimpleStockSchema
     
