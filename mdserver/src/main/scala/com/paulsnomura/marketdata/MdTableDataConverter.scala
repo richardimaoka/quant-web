@@ -8,7 +8,6 @@ import com.paulsnomura.mdserver.table.schema.SimpleStockSchema
 
 import akka.actor.Actor
 import akka.actor.ActorRef
-import akka.actor.actorRef2Scala
 
 trait MdTableDataConverter extends Actor{
     self: SubscriberComponent => 
