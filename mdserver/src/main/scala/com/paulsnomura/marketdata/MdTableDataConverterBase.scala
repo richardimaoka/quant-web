@@ -9,12 +9,12 @@ import com.paulsnomura.mdserver.table.schema.SimpleStockSchema
 import akka.actor.Actor
 import akka.actor.ActorRef
 
-trait MdTableDataConverter extends Actor{
+trait MdTableDataConverterBase extends Actor {
     self: Subscriber => 
     
     val tableDataServerRef : ActorRef
     
-	val logger = LogManager.getLogger(this.getClass().getName())
+	val logger = LogManager.getLogger(MdTableDataConverterBase.this.getClass().getName())
     
 	val schema = SimpleStockSchema
     
@@ -38,3 +38,9 @@ trait MdTableDataConverter extends Actor{
 	}
 }
 
+class MdTableDataConverter(
+	override val tableDataServerRef: ActorRef,
+	override val name: String
+)
+extends MdTableDataConverterBase with MdSubscriberDummy{    
+}

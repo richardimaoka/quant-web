@@ -20,7 +20,7 @@ extends TestKit(ActorSystem("MdTableDataConverterRootTest")) with FlatSpecLike {
 
     class MockRoot extends MdTableDataConverterRoot{
         override def accessCodes: Seq[String] = List[String]( "a", "b", "c" )
-        override def createActor( accessCode: String ) = new MdTableDataConverter with MdSubscriberDummy{
+        override def createActor( accessCode: String ) = new MdTableDataConverterBase with MdSubscriberDummy{
         	override val tableDataServerRef = testActor
         	override val name = accessCode 
         }

@@ -8,7 +8,7 @@ trait MdTableDataConverterRoot extends Actor{
 
     def accessCodes: Seq[String]
        
-    def createActor( accessCode: String ): MdTableDataConverter 
+    def createActor( accessCode: String ): MdTableDataConverterBase 
 
     override def preStart() = {
     	accessCodes foreach ( accessCode => context.actorOf( Props( createActor( accessCode ) ) ) )     		

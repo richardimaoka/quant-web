@@ -21,12 +21,12 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
  
     val schema  = SimpleStockSchema
     
-    class MockConverter( mockSubscriberEngine: SubscriberEngine ) extends MdTableDataConverter with Subscriber{ 
+    class MockConverter( mockSubscriberEngine: SubscriberEngine ) extends MdTableDataConverterBase with Subscriber{ 
         override val tableDataServerRef = testActor 
         override val subscriberEngine = mockSubscriberEngine 
     }
     
-    class DummyConverter( override val name: String ) extends MdTableDataConverter with MdSubscriberDummy{ 
+    class DummyConverter( override val name: String ) extends MdTableDataConverterBase with MdSubscriberDummy{ 
         override val tableDataServerRef = testActor
     } 
       
