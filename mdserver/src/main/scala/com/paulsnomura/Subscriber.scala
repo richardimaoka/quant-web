@@ -1,10 +1,10 @@
 package com.paulsnomura.marketdata
 
-trait Subscriber {
+trait SubscriberEngine {
 	def subscribe()   : Unit
 	def unsubscribe() : Unit
 }
 
-trait SubscriberComponent{
-    val subscriber: Subscriber
+trait Subscriber{
+    val subscriberEngine: SubscriberEngine
 }

@@ -10,7 +10,7 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 
 trait MdTableDataConverter extends Actor{
-    self: SubscriberComponent => 
+    self: Subscriber => 
     
     val tableDataServerRef : ActorRef
     
@@ -18,8 +18,8 @@ trait MdTableDataConverter extends Actor{
     
 	val schema = SimpleStockSchema
     
-	override def preStart() = subscriber.subscribe() 
-	override def postStop() = subscriber.unsubscribe() 
+	override def preStart() = subscriberEngine.subscribe() 
+	override def postStop() = subscriberEngine.unsubscribe() 
 
 	override def receive = {
 		case marketData : SimpleStockData => {

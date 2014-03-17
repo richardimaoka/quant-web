@@ -21,17 +21,17 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
  
     val schema  = SimpleStockSchema
     
-    class MockConverter( mockSubscriber: Subscriber ) extends MdTableDataConverter with SubscriberComponent{ 
+    class MockConverter( mockSubscriberEngine: SubscriberEngine ) extends MdTableDataConverter with Subscriber{ 
         override val tableDataServerRef = testActor 
-        override val subscriber = mockSubscriber 
+        override val subscriberEngine = mockSubscriberEngine 
     }
     
-    class DummyConverter( override val name: String ) extends MdTableDataConverter with MdSubscriberComponentDummy{ 
+    class DummyConverter( override val name: String ) extends MdTableDataConverter with MdSubscriberDummy{ 
         override val tableDataServerRef = testActor
     } 
       
    "MdTableDataConverter" should "receive the market data and publish TableDataRow" in {
-   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mock(classOf[Subscriber])) )  )
+   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mock(classOf[SubscriberEngine])) )  )
    	    val marketData     = SimpleStockData( "Toyota", 100.0, 50 )
    	    val tableData      = TableDataRow(schema.name("Toyota"), schema.price(100), schema.volume(50))   	    
    	    converterRef ! marketData
@@ -39,19 +39,19 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
    }
     
    it should "call subscribe() and unsubscribe() on startup and stop" in {
-        val mockSubscriber = mock(classOf[Subscriber])
-   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mockSubscriber) ) )
+        val mockSubscriberEngine = mock(classOf[SubscriberEngine])
+   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mockSubscriberEngine) ) )
    	    converterRef.start()
-        verify(mockSubscriber).subscribe()
+        verify(mockSubscriberEngine).subscribe()
         
    	    converterRef.suspend() //need to susbent the actor before calling restart below
    	    converterRef.restart( new Exception())
-        verify(mockSubscriber, times(2)).subscribe()
-        verify(mockSubscriber).unsubscribe()
+        verify(mockSubscriberEngine, times(2)).subscribe()
+        verify(mockSubscriberEngine).unsubscribe()
 
         converterRef.stop()
-        verify(mockSubscriber, times(2)).subscribe()
-        verify(mockSubscriber, times(2)).unsubscribe()
+        verify(mockSubscriberEngine, times(2)).subscribe()
+        verify(mockSubscriberEngine, times(2)).unsubscribe()
         
    }
    
