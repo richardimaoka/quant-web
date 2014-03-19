@@ -1,37 +1,36 @@
 package com.paulsnomura.marketdata
 
 import scala.concurrent.duration.DurationInt
-
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.scalatest.Finders
 import org.scalatest.FlatSpecLike
-
 import com.paulsnomura.marketdata.api.SimpleStockData
 import com.paulsnomura.mdserver.table.TableDataRow
 import com.paulsnomura.mdserver.table.schema.SimpleStockSchema
-
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
+import com.paulsnomura.TableDataSender
 
 class MdTableDataConverterTest 
 extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
  
     val schema  = SimpleStockSchema
     
-    class MockConverter( mockSubscriberEngine: SubscriberEngine ) extends MdTableDataConverterBase with Subscriber{ 
-        override val tableDataServerRef = testActor 
+    class MockConverter( mockSubscriberEngine: MdSubscriberEngine ) extends MdTableDataConverterBase with MdSubscriber with TableDataSender{ 
+        override val targetRef = testActor 
         override val subscriberEngine = mockSubscriberEngine 
     }
     
-    class DummyConverter( override val name: String ) extends MdTableDataConverterBase with MdSubscriberDummy{ 
-        override val tableDataServerRef = testActor
-    } 
+    class DummyConverter( override val name: String ) extends MdTableDataConverterBase with MdSubscriberDummy with TableDataSender{
+        override val targetRef = testActor
+    }
       
    "MdTableDataConverter" should "receive the market data and publish TableDataRow" in {
-   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mock(classOf[SubscriberEngine])) )  )
+   	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mock(classOf[MdSubscriberEngine])) )  )
    	    val marketData     = SimpleStockData( "Toyota", 100.0, 50 )
    	    val tableData      = TableDataRow(schema.name("Toyota"), schema.price(100), schema.volume(50))   	    
    	    converterRef ! marketData
@@ -39,7 +38,7 @@ extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
    }
     
    it should "call subscribe() and unsubscribe() on startup and stop" in {
-        val mockSubscriberEngine = mock(classOf[SubscriberEngine])
+        val mockSubscriberEngine = mock(classOf[MdSubscriberEngine])
    	    val converterRef   = TestActorRef[MockConverter]( Props( new MockConverter(mockSubscriberEngine) ) )
    	    converterRef.start()
         verify(mockSubscriberEngine).subscribe()

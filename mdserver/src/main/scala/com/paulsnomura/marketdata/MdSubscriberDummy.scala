@@ -9,10 +9,10 @@ import akka.actor.Actor
 import akka.actor.Cancellable
 import akka.actor.actorRef2Scala
 
-trait MdSubscriberDummy extends Subscriber { 
+trait MdSubscriberDummy extends MdSubscriber { 
 	self: Actor => 
-
-    def name: String
+	
+    val name: String
     
     implicit val ec = context.dispatcher
     val scheduler   = context.system.scheduler
@@ -22,7 +22,7 @@ trait MdSubscriberDummy extends Subscriber {
     /**
      * name: by-name parameter to avoid issues in the order of initialization
      */
-    class MdSubscriberEngineDummy( name: => String ) extends SubscriberEngine{
+    class MdSubscriberEngineDummy( name: => String ) extends MdSubscriberEngine{
 		val rnd = new Random
 		def randomMarketData() = SimpleStockData( name, rnd.nextDouble, rnd.nextDouble )
 				
