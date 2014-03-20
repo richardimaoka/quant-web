@@ -1,7 +1,7 @@
-package com.paulsnomura
+package com.paulsnomura.mdserver.table
 
 import akka.actor.ActorRef
-import com.paulsnomura.mdserver.table.TableDataRow
+import akka.actor.actorRef2Scala
 
 //YAGNI! - If the below two traits are ever needed, then split them out as more generic base traits
 //trait SenderEngine {

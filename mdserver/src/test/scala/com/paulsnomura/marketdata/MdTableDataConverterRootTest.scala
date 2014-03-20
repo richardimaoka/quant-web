@@ -9,7 +9,7 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import com.paulsnomura.TableDataSender
+import com.paulsnomura.mdserver.table.TableDataSender
 
 class MdTableDataConverterRootTest 
 extends TestKit(ActorSystem("MdTableDataConverterRootTest")) with FlatSpecLike {
@@ -17,11 +17,12 @@ extends TestKit(ActorSystem("MdTableDataConverterRootTest")) with FlatSpecLike {
     val schema  = SimpleStockSchema
 
     class MockRoot extends MdTableDataConverterRoot{
-        override def accessCodes: Seq[String] = List[String]( "a", "b", "c" )
-        override def createActor( accessCode: String ) = new MdTableDataConverterBase with MdSubscriberDummy with TableDataSender{
+        val accessCodes: Seq[String] = List[String]( "a", "b", "c" )
+        def createActor( accessCode: String ) = new MdTableDataConverterBase with MdSubscriberDummy with TableDataSender{
         	override val targetRef = testActor
         	override val name = accessCode 
         }
+        override val propsSequence = accessCodes map ( accessCode => Props( createActor(accessCode) ) )
     }
     
     "MdTableDataConverterRoot" should "publish data for accessCode" in {

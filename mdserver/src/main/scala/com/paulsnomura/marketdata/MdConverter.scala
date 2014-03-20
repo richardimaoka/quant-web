@@ -6,7 +6,7 @@ import com.paulsnomura.mdserver.table.TableDataRow
 import com.paulsnomura.mdserver.table.schema.SimpleStockSchema
 import akka.actor.Actor
 import akka.actor.ActorRef
-import com.paulsnomura.TableDataSender
+import com.paulsnomura.mdserver.table.TableDataSender
 
 trait MdTableDataConverterBase extends Actor{
     this: MdSubscriber with TableDataSender =>  
@@ -35,9 +35,9 @@ trait MdTableDataConverterBase extends Actor{
 	}
 }
 
-//class MdTableDataConverter(
-//	override val tableDataServerRef: ActorRef,
-//	override val name: String
-//)
-//extends MdTableDataConverterBase with Actor with MdSubscriber with MdSender{    
-//}
+class MdTableDataConverter(
+	override val targetRef: ActorRef,
+	override val name: String
+)
+extends MdTableDataConverterBase with Actor with MdSubscriberDummy with TableDataSender{    
+}

@@ -13,7 +13,7 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import com.paulsnomura.TableDataSender
+import com.paulsnomura.mdserver.table.TableDataSender
 
 class MdTableDataConverterTest 
 extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
