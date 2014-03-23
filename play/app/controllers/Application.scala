@@ -31,6 +31,11 @@ object Application extends Controller {
         Ok(views.html.show(request))
     }
 
+    def trading = Action {
+    	implicit request =>
+        Ok(views.html.trading(request))
+    }
+
     def timer = Action {
     	implicit request =>
         Ok(views.html.timer(request))

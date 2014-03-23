@@ -1,0 +1,56 @@
+body {
+	background-repeat: no-repeat;
+	background-size: auto;
+}
+
+div {
+	border: 3px ridge Black;
+	padding: 15px;
+	background: LightGray;
+	border-radius: 5px;
+	box-shadow: 10px 10px 5px #888888;
+	margin: 10px;
+}
+
+#marketdata {
+	width: 500px;
+	float: left;
+}
+
+#orderpanel {
+	width: 300px;
+	float: left
+}
+
+#orderblotter {
+	clear: both
+}
+
+table {
+	border: 2px solid LightGray;
+	border-spacing: 1px 0px;
+	box-shadow: 10px 10px 5px #888888;
+	border-radius: 5px;
+}
+
+input {
+	border-radius: 5px;
+}
+
+th {
+	background: linear-gradient(to bottom, LightGray, DimGray);
+	padding: 2px;
+}
+
+tr:nth-child(even) {
+	background: linear-gradient(to bottom, LightSkyBlue, RoyalBlue, LightSkyBlue);
+}
+
+tr:nth-child(odd) {
+	background: linear-gradient(to bottom, Silver, White);
+}
+
+td {
+	padding: 2px 10px;
+	border: 10px Black;
+}
