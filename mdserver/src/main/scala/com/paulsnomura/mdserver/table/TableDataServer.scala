@@ -21,6 +21,8 @@ abstract class TableDataServer (initialSchema: TableDataSchema) extends Actor {
     def send( clientName: String, schma : TableDataSchema ) : Unit
     def send( clientName: String, row   : TableDataRow )    : Unit
     
+    def clientStartupHook( clientName: String ): Unit = {} 
+    
     //To enable compiler warning for non exhaustive match for MessageCase, 
     //Define this as a standalone pattern match rather than partial function on which compiler does not perform non exhaustive check
     def processMessage( msg: MessageCase ): Unit = msg match {
@@ -39,6 +41,7 @@ abstract class TableDataServer (initialSchema: TableDataSchema) extends Actor {
         }
         case ClientStartup(clientName) => {
             logger.info( "Detected startup of client = {}", clientName )
+            clientStartupHook(clientName)
         	self ! SendTableDataSchema(clientName)
         	self ! SendEntireTableData(clientName)
         }            

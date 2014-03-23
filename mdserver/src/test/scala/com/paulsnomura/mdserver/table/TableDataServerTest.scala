@@ -50,6 +50,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
         override def broadcast(row: TableDataRow)       = testActor ! ("broadcast", row)
         override def send(clientName: String, schema: TableDataSchema) = testActor ! ("send", clientName, schema)
         override def send(clientName: String, row: TableDataRow)       = testActor ! ("send", clientName, row)
+        override def clientStartupHook(clientName: String) = testActor ! ("clientStartupHook", clientName)
     }
 
     
@@ -127,6 +128,7 @@ extends TestKit(ActorSystem("TableDataServerTest")) with FlatSpecLike {
 	    serverRef ! ClientStartup( clientName )
 
 	    expectMsgAllOf( 1.seconds, 
+            ( "clientStartupHook", clientName ), 
 	        ( "send", clientName, schema ),
             ( "send", clientName, sampleMap.getOrElse("Toyota", throw new Exception("Toyota Not Found!!")) ),
             ( "send", clientName, sampleMap.getOrElse("Honda",  throw new Exception("Honda Not Found!!"))  ),
