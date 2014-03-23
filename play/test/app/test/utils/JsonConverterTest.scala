@@ -9,10 +9,11 @@ import com.paulsnomura.mdserver.table.schema.SampleSchema
 import play.api.libs.json.Json
 import play.api.libs.json.Json.toJsFieldJsValueWrapper
 import utils.JsonConverter.TableDataRowWrites
+import utils.JsonConverter.TableDataSchemaWrites
 
 class JsonConverterTest extends FlatSpec with Matchers{
 
-    it should " construct Json value from TableDataSchema" in {
+    it should " construct Json value from TableDataRow" in {
 
         val schema = SampleSchema
         val row    = TableDataRow( schema.name("James"), schema.age(25), schema.height(170.5) )
@@ -20,5 +21,13 @@ class JsonConverterTest extends FlatSpec with Matchers{
         val converted = Json.toJson( row )
     
         assert( Json.obj("name" -> "James", "age" -> 25, "height" -> 170.5) == converted )
+    }
+    
+    it should " construct Json value from TableDataSchema" in {
+
+        val schema = SampleSchema
+        val converted = Json.toJson( schema )
+    
+        assert( Json.obj("name" -> "String", "height" -> "Number", "age" -> "Number") == converted )
     } 
 }
