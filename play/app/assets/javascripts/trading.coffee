@@ -11,11 +11,11 @@
         data = JSON.parse( msg.data )      
         
         if( data.type == "TableDataRow" ) 
-            $scope.t[ data.row.name ]  = data.row
+            $scope.table[ data.row.name ]  = data.row
         else if( data.type == "TableDataSchema" )
-            $scope.t[ "schema"  ]  = data.columns
+            $scope.schema = data.columns
         
     )
     
-    $scope.t = {} 
+    $scope.table = {} 
  )

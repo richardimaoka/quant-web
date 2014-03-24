@@ -15,8 +15,15 @@
 <h1>My Trading Application</h1>
 
 <div ng-app="trading">
-<div ng-controller="MdTableController" >
-{{t}}
+<div ng-controller="MdTableController">
+<table>
+<tr>
+<th ng-repeat="(column, coltype) in schema">{{column}}</th>
+</tr>
+<tr ng-repeat="row in table">
+<td ng-repeat="field in row">{{field}}</td>
+</tr>
+</table>
 </div>
 </div>
 
