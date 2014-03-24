@@ -2,6 +2,7 @@ package com.paulsnomura.mdserver.table
 
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
+import com.paulsnomura.mdserver.table.TableDataServer.UpdateTableDataRow
 
 //YAGNI! - If the below two traits are ever needed, then split them out as more generic base traits
 //trait SenderEngine {
@@ -28,6 +29,6 @@ trait TableDataSender{
     //It's giving the default implementation of the senderEngine, but you can extend this trait to override senderEngine to inject a different one 
     val senderEngine = new TableDataSenderEngine{
         type MessageType = TableDataRow
-    	override def send(message: MessageType) = targetRef ! message 
+    	override def send(row: MessageType) = targetRef ! UpdateTableDataRow( row ) 
 	}
 }
