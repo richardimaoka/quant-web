@@ -35,7 +35,7 @@ class TimerActor extends Actor {
             val time = Calendar.getInstance().getTime().toString()
             val row  = TableDataRow( SampleSchema.name("Burnables" + time.toString ), SampleSchema.age(25), SampleSchema.height(125) )
             channel push Json.toJson(row) 
-            println( row )
+            //println( row )
         }
     }
 }

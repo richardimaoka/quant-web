@@ -29,7 +29,8 @@ object JsonConverter {
     }
     
     implicit object TableDataRowWrites extends Writes[TableDataRow]{
-        def writes(row: TableDataRow) = Json.toJson( row.toMap )
+        def writes(row: TableDataRow) = 
+            Json.obj( "type" -> "TableDataRow", "row" -> Json.toJson( row.toMap ) )
     }  	
 
     implicit object TableDataSchemaWrites extends Writes[TableDataSchema]{
@@ -40,7 +41,7 @@ object JsonConverter {
 	    }
 
         def writes(schema: TableDataSchema) = {
-        	JsObject( schema.getColumns map ( convert ) )
+        	Json.obj( "type" -> "TableDataSchema", "columns" -> JsObject( schema.getColumns map ( convert ) ) )
         }
     }
 

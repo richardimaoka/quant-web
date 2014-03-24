@@ -19,15 +19,22 @@ class JsonConverterTest extends FlatSpec with Matchers{
         val row    = TableDataRow( schema.name("James"), schema.age(25), schema.height(170.5) )
 
         val converted = Json.toJson( row )
-    
-        assert( Json.obj("name" -> "James", "age" -> 25, "height" -> 170.5) == converted )
+        val expected  = Json.obj(
+            "type" -> "TableDataRow",
+        	"row"  -> Json.obj( "name" -> "James", "age" -> 25, "height" -> 170.5) 
+        )
+        assert( expected == converted )
     }
     
     it should " construct Json value from TableDataSchema" in {
 
         val schema = SampleSchema
         val converted = Json.toJson( schema )
+        val expected  = Json.obj(
+            "type"    -> "TableDataSchema",    
+        	"columns" -> Json.obj("name" -> "String", "height" -> "Number", "age" -> "Number")
+        )
     
-        assert( Json.obj("name" -> "String", "height" -> "Number", "age" -> "Number") == converted )
+        assert( expected == converted )
     } 
 }

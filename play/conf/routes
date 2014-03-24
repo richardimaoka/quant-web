@@ -5,6 +5,7 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /websocket                  controllers.Application.timerWebSocket
+GET     /mdwebsocket                controllers.Application.mdTableWebSocket
 GET     /show                       controllers.Application.show
 GET     /timer                      controllers.Application.timer
 GET     /trading                    controllers.Application.trading

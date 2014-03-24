@@ -8,11 +8,18 @@
         <title>test</title>
         <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/trading.css")">
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
-        <script src="@routes.Assets.at("javascripts/timer.js")" type="text/javascript"></script>
+        <script src="@routes.Assets.at("javascripts/trading.js")" type="text/javascript"></script>
     </head>
 <body>
 
 <h1>My Trading Application</h1>
+
+<div ng-app="trading">
+<div ng-controller="MdTableController" >
+{{t}}
+</div>
+</div>
+
 <div id="marketdata">
 <table id="mdtable">
  <tr>
@@ -134,11 +141,11 @@
 <div id="orderentry">
 <form name="orderentryform">
 <label for="asset">Asset</label>
-<input type="text" name="asset" id="asset">
+<input type="text" name="asset" id="asset"><br>
 <label for="price">Price</label>
-<input type="text" name="price" id="price">
+<input type="text" name="price" id="price"><br>
 <label for="quantity">Quantity</label>
-<input type="text" name="quantity" id="quantity">
+<input type="text" name="quantity" id="quantity"><br>
 <input type="submit" value="Submit Order">
 </form>
 </div>

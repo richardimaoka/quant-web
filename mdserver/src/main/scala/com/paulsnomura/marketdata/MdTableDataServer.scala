@@ -8,10 +8,10 @@ import akka.actor.Props
 
 class MdTableDataServer extends TableDataServer( SimpleStockSchema ) {
 
-    override def broadcast( schema : TableDataSchema ) : Unit = logger.info( "sending {}", schema )
-    override def broadcast( row    : TableDataRow )    : Unit = logger.info( "sending {}", row )
-    override def send( clientName: String, schema : TableDataSchema ) : Unit = logger.info( "sending {}", schema )
-    override def send( clientName: String, row   : TableDataRow )     : Unit = logger.info( "sending {}", row )
+    override def broadcast( schema : TableDataSchema ) : Unit = logger.info( "skelton: broadcasting {}", schema )
+    override def broadcast( row    : TableDataRow )    : Unit = logger.info( "skelton: broadcasting {}", row )
+    override def send( clientName: String, schema : TableDataSchema ) : Unit = logger.info( "skelton: sending {}", schema )
+    override def send( clientName: String, row   : TableDataRow )     : Unit = logger.info( "skelton: sending {}", row )
     
     override def preStart() = {
         context.actorOf( Props( new MdConverterRootDB( self ) ) )
