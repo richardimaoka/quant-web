@@ -1,53 +1,101 @@
-body{
-background-repeat:no-repeat;
-background-size:auto;
+body {
+    margin: 0px;
 }
 
-div{
-border:3px ridge Black;
-padding: 15px;
-background: LightGray;
-border-radius: 5px;
-box-shadow: 10px 10px 5px #888888;
+#title {
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 1), rgba(216, 216, 216, 1));
+    box-shadow: 0px 10px 5px #888888;
+    margin: 0px 0px;
+    padding: 0px 0px;
+    height: 80px;
+    font-family: 'Oswald', sans-serif;
 }
 
-#marketdata{
-width: 500px;
-float:left;
-}
-#orderpanel{
-width: 300px;
-float:left
-}
-#orderblotter{
-clear:both
+#title1 {
+    color: rgba(0, 0, 0, 0.1)
 }
 
-table{
-border:2px solid LightGray;
-border-spacing:1px 0px;
-box-shadow: 10px 10px 5px #888888;
-border-radius: 5px;
-} 
-
-input{
-border-radius: 5px;
+#title2 {
+    color: rgba(0, 0, 0, 1);
+    position: relative;
+    bottom: 35px;
+    left: 30px;
 }
 
-th{
-background: linear-gradient(to bottom, LightGray, DimGray);
-padding:2px;
+#title3 {
+    color: rgba(0, 0, 0, 0.1);
+    position: relative;
+    bottom: 65px;
 }
 
-tr:nth-child(even){
-background: linear-gradient(to bottom, LightSkyBlue, RoyalBlue, LightSkyBlue);
+h1 {
+    margin: 0px 10px;
 }
 
-tr:nth-child(odd){
-background: linear-gradient(to bottom, Silver, White);
+.panel {
+    margin: 20px 10px;
+    padding: 0px 0px 5px;
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 1), rgba(216, 216, 216, 1));
+    border-radius: 10px;
+    color: Blue;
 }
 
-td{
-padding:2px 10px;
-border: 10px Black;
+h2.panel-title {
+    color: White;
+    background: linear-gradient(to right, Orange, Yellow);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin: 0px;
+    padding: 2px 10px;
+}
+
+table {
+    font-size: 12px;
+    width: 95%;
+    margin: 10px 2.5%;
+    border-spacing: 1px 1px;
+}
+
+th {
+    color: White;
+    background: linear-gradient(to bottom, LightSkyBlue, RoyalBlue);
+    padding: 2px;
+}
+
+th:hover {
+    box-shadow: 0px 0px 10px 2px DarkGray inset;
+}
+
+tr:nth-child(even) {
+    color: Blue;
+    background: White;
+}
+
+tr:nth-child(odd) {
+    color: Blue;
+    background: White;
+}
+
+tr:hover {
+    box-shadow: 0px 0px 10px 2px DarkGray inset;
+}
+
+td {
+    padding: 2px 10px;
+    border: 10px Black;
+}
+
+button {
+    display: inline-block;
+    width: 120px;
+    margin: 5px 5px 0px;
+    padding: 2px 10px;
+    border: 0px solid;
+    border-radius: 10px;
+    color: White;
+    background: linear-gradient(to bottom, DarkGray 50%, Gray 50%);
+}
+
+button:hover {
+    box-shadow: 0px 0px 10px 2px Black inset;
 }
