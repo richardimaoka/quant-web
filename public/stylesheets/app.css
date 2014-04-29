@@ -1,0 +1,104 @@
+body {
+    margin: 0px;
+}
+
+#title {
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 1), rgba(216, 216, 216, 1));
+    box-shadow: 0px 10px 5px #888888;
+    margin: 0px 0px;
+    padding: 0px 0px;
+    height: 80px;
+    font-family: 'Oswald', sans-serif;
+}
+
+#title1 {
+    color: rgba(0, 0, 0, 0.1)
+}
+
+#title2 {
+    color: rgba(0, 0, 0, 1);
+    position: relative;
+    bottom: 35px;
+    left: 30px;
+}
+
+#title3 {
+    color: rgba(0, 0, 0, 0.1);
+    position: relative;
+    bottom: 65px;
+}
+
+h1 {
+    margin: 0px 10px;
+}
+
+.panel {
+    margin: 20px 10px;
+    padding: 0px 0px 5px;
+    background: linear-gradient(to bottom, rgba(250, 250, 250, 1), rgba(216, 216, 216, 1));
+    border-radius: 10px;
+    color: Blue;
+}
+
+h2.panel-title {
+    color: White;
+    background: linear-gradient(to right, Orange, Yellow);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin: 0px;
+    padding: 2px 10px;
+}
+
+table {
+    font-size: 12px;
+    width: 95%;
+    margin: 10px 2.5%;
+    border-spacing: 1px 1px;
+}
+
+th {
+    color: White;
+    background: linear-gradient(to bottom, LightSkyBlue, RoyalBlue);
+    padding: 2px;
+}
+
+th:hover {
+    box-shadow: 0px 0px 10px 2px DarkGray inset;
+}
+
+tr:nth-child(even) {
+    color: Blue;
+    background: White;
+}
+
+tr:nth-child(odd) {
+    color: Blue;
+    background: White;
+}
+
+tr:hover {
+    box-shadow: 0px 0px 10px 2px DarkGray inset;
+}
+
+td {
+    padding: 2px 10px;
+    border: 10px Black;
+}
+
+button {
+    display: inline-block;
+    width: 120px;
+    margin: 5px 5px 0px;
+    padding: 2px 10px;
+    border: 0px solid;
+    border-radius: 10px;
+    color: White;
+    background: linear-gradient(to bottom, DarkGray 50%, Gray 50%);
+}
+
+button:hover {
+    box-shadow: 0px 0px 10px 2px Black inset;
+}
+
+
+/*@ sourceMappingURL=app.css.map*/
