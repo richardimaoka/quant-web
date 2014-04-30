@@ -23,7 +23,7 @@ angular.module( 'mdtable', ['mdtable.service', 'mdtable.websocket'] )
     )
   )
 
-
+  ###
   $scope.table = {}
 
   $scope.table.columnGroups = [
@@ -92,7 +92,7 @@ angular.module( 'mdtable', ['mdtable.service', 'mdtable.websocket'] )
       market2_bid: 200
       market2_ask: 204
       market2_askSize: 2200
-
+  ###
 ])
 
 
