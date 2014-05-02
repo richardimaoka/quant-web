@@ -1,4 +1,4 @@
-name := "quant-web"
+name := "webapp"
 
 version := "1.0-SNAPSHOT"
 
