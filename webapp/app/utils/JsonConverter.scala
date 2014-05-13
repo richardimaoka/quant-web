@@ -12,7 +12,6 @@ import play.api.libs.json.Json
 import play.api.libs.json.Writes
 import com.quantweb.mdserver.table.TableDataColumn
 import com.quantweb.mdserver.table.TableDataDoubleColumn
-import com.quantweb.mdserver.table.TableDataDoubleColumn
 import com.quantweb.mdserver.table.TableDataStringColumn
 import com.quantweb.mdserver.table.TableDataIntegerColumn
 import play.api.libs.json.JsObject
