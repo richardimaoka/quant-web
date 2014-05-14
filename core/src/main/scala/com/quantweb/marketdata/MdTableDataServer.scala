@@ -1,11 +1,11 @@
 package com.quantweb.marketdata
 
 import akka.actor.Props
-import com.quantweb.mdserver.table.TabularDataServer
+import com.quantweb.mdserver.table.TableDataServer
 import com.quantweb.mdserver.table.model.TabularDataSchema
 import scala.slick.driver.H2Driver.simple._
 
-class MdTableDataServer( schema: TabularDataSchema ) extends TabularDataServer(schema) {
+class MdTableDataServer( schema: TabularDataSchema ) extends TableDataServer(schema) {
 
   val marketAccessCodes = try {
     Database.forURL("jdbc:h2:tcp://localhost/~/hellohello", driver = "org.h2.Driver", user = "sa") withSession {

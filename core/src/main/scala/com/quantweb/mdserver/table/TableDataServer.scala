@@ -1,15 +1,15 @@
 package com.quantweb.mdserver.table
 
 import org.apache.logging.log4j.LogManager
-import com.quantweb.mdserver.table.TabularDataServer._
+import com.quantweb.mdserver.table.TableDataServer._
 import akka.actor.{ActorRef, Actor}
-import com.quantweb.mdserver.table.TabularDataServer.SendEntireTableData
-import com.quantweb.mdserver.table.TabularDataServer.SendTableDataSchema
-import com.quantweb.mdserver.table.TabularDataServer.ClientStartup
+import com.quantweb.mdserver.table.TableDataServer.SendEntireTableData
+import com.quantweb.mdserver.table.TableDataServer.SendTableDataSchema
+import com.quantweb.mdserver.table.TableDataServer.ClientStartup
 import akka.routing.{BroadcastRoutingLogic, Router}
 import com.quantweb.mdserver.table.model.{TabularDataSchema, TabularDataModel}
 
-class TabularDataServer( val schema: TabularDataSchema ) extends Actor {
+class TableDataServer( val schema: TabularDataSchema ) extends Actor {
   val logger = LogManager.getLogger(this.getClass().getName())
 
   var broadcastRouter = Router( BroadcastRoutingLogic() )
@@ -68,7 +68,7 @@ class TabularDataServer( val schema: TabularDataSchema ) extends Actor {
   }
 }
 
-object TabularDataServer {
+object TableDataServer {
   sealed abstract class ClientMessageCase
   //when client starts up, it sends this message to the server
   case class ClientStartup(client: ActorRef) extends ClientMessageCase

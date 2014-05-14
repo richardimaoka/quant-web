@@ -4,7 +4,7 @@ import scala.concurrent.duration.DurationInt
 
 import org.scalatest.FlatSpecLike
 
-import com.quantweb.mdserver.table.TabularDataServer.{SendEntireTableData, SendTableDataSchema, ClientStartup}
+import com.quantweb.mdserver.table.TableDataServer.{SendEntireTableData, SendTableDataSchema, ClientStartup}
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
@@ -18,7 +18,7 @@ import com.quantweb.mdserver.table.model.{TabularDataModel, SampleModelSchema, S
  * Be careful on testActor shared across test cases (i.e.) as the above TabularDataServerMock relays messages back to testActor
  * messages from other test cases can be received in the current test case, which causes confusing errors
  */
-class TabularDataServerTest
+class TableDataServerTest
   extends TestKit(ActorSystem("TabularDataServerTest")) with FlatSpecLike {
 
   //------------------------------------------------------
@@ -28,7 +28,7 @@ class TabularDataServerTest
    * testActor : when TabularDataServerMock send() or broadcast() a message, it might send it back to testActor for testing
    * you can't do sender ! xyz since sender is not always testActer (i.e.) TabularDataServer sends a message to itself for certain cases
    */
-  class TabularDataServerMock(testActor: ActorRef) extends TabularDataServer(SampleModelSchema) {
+  class TableDataServerMock(testActor: ActorRef) extends TableDataServer(SampleModelSchema) {
     override def broadcastSchema = testActor ! ("broadcast", schema)
     override def broadcastRow(row: TabularDataModel) = testActor ! ("broadcast", row)
     override def sendSchema(client: ActorRef) = testActor ! ("send", client, schema)
@@ -46,7 +46,7 @@ class TabularDataServerTest
   //------------------------------------------------------
 
   "TabularDataServer" should "broadcast row update" in {
-    val serverRef = TestActorRef[TabularDataServerMock](Props(new TabularDataServerMock(testActor)))
+    val serverRef = TestActorRef[TableDataServerMock](Props(new TableDataServerMock(testActor)))
     val row = SampleModel("Toyota", 100, 50)
     serverRef ! row
 
@@ -54,14 +54,14 @@ class TabularDataServerTest
   }
 
   it should "send current schema on request" in {
-    val serverRef  = TestActorRef[TabularDataServerMock](Props(new TabularDataServerMock(testActor)))
+    val serverRef  = TestActorRef[TableDataServerMock](Props(new TableDataServerMock(testActor)))
     serverRef ! SendTableDataSchema(testActor)
 
     expectMsg(1.seconds, ("send", testActor, SampleModelSchema))
   }
 
   it should "send entire data on request" in {
-    val serverRef = TestActorRef[TabularDataServerMock](Props(new TabularDataServerMock(testActor)))
+    val serverRef = TestActorRef[TableDataServerMock](Props(new TableDataServerMock(testActor)))
     val server = serverRef.underlyingActor
     server.tableData = sampleMap
 
@@ -75,7 +75,7 @@ class TabularDataServerTest
   }
 
   it should "send current schema and entire data to client on client's startup" in {
-    val serverRef = TestActorRef[TabularDataServerMock](Props(new TabularDataServerMock(testActor)))
+    val serverRef = TestActorRef[TableDataServerMock](Props(new TableDataServerMock(testActor)))
     val server = serverRef.underlyingActor
     server.tableData = sampleMap
 
@@ -90,7 +90,7 @@ class TabularDataServerTest
   }
 
   it should "construct the inner table consistent with cumulative row-update inputs" in {
-    val serverRef = TestActorRef[TabularDataServerMock](Props(new TabularDataServerMock(testActor)))
+    val serverRef = TestActorRef[TableDataServerMock](Props(new TableDataServerMock(testActor)))
     val server = serverRef.underlyingActor
 
     assert(0 == server.tableData.size)
