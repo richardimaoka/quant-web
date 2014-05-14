@@ -2,7 +2,6 @@ package com.quantweb.marketdata
 
 import scala.concurrent.duration.DurationInt
 import org.scalatest.FlatSpecLike
-import com.quantweb.mdserver.table.schema.SimpleStockSchema
 import akka.actor.{Props, ActorSystem}
 import akka.testkit.{TestActorRef, TestKit}
 import com.quantweb.marketdata.api.BidAskData
@@ -11,8 +10,6 @@ import com.quantweb.mdserver.table.model.BidAskModel
 
 class MdBidAskConverterTest
   extends TestKit(ActorSystem("MdTableDataConverterTest")) with FlatSpecLike {
-
-  val schema = SimpleStockSchema
 
 //  class MockConverter(mockSubscriberEngine: MdSubscriberEngine) extends MdTableDataConverterBase with MdSubscriber with TableDataSender {
 //    override val targetRef = testActor
