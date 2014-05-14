@@ -12,7 +12,7 @@ import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import com.quantweb.mdserver.table.model.{TabularDataModel, SampleModelSchema, SampleModel}
+import com.quantweb.mdserver.table.model.{TableDataModel, SampleModelSchema, SampleModel}
 
 /**
  * Be careful on testActor shared across test cases (i.e.) as the above TabularDataServerMock relays messages back to testActor
@@ -30,9 +30,9 @@ class TableDataServerTest
    */
   class TableDataServerMock(testActor: ActorRef) extends TableDataServer(SampleModelSchema) {
     override def broadcastSchema = testActor ! ("broadcast", schema)
-    override def broadcastRow(row: TabularDataModel) = testActor ! ("broadcast", row)
+    override def broadcastRow(row: TableDataModel) = testActor ! ("broadcast", row)
     override def sendSchema(client: ActorRef) = testActor ! ("send", client, schema)
-    override def sendRow(client: ActorRef, row: TabularDataModel) = testActor ! ("send", client, row)
+    override def sendRow(client: ActorRef, row: TableDataModel) = testActor ! ("send", client, row)
   }
 
   val sampleMap = Map[String, SampleModel](
@@ -101,7 +101,7 @@ class TableDataServerTest
     server.processRowUpdateMessage(new SampleModel("Toyota", 200, 50))
     server.processRowUpdateMessage(new SampleModel("Suzuki", 100, 50))
 
-    val expectedMap = Map[String, TabularDataModel](
+    val expectedMap = Map[String, TableDataModel](
       "Toyota" -> SampleModel("Toyota", 200, 50),
       "Honda"  -> SampleModel("Honda",  101, 60),
       "Nissan" -> SampleModel("Nissan", 102, 70),

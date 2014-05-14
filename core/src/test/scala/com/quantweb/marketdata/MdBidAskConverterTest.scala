@@ -44,19 +44,6 @@ class MdBidAskConverterTest
 //    verify(mockSubscriberEngine, times(2)).unsubscribe()
 //  }
 
-//  "MdSubscriberDummy" should "auto generate data periodically" in {
-//    val converterRef = TestActorRef[DummyConverter](Props(new DummyConverter("dummyName")))
-//
-//    try {
-//      //It should receive periodical updates multiple times
-//      assert(expectMsgType[UpdateTableDataRow](2.seconds).row.getValue(schema.name).getOrElse("") == "dummyName")
-//      assert(expectMsgType[UpdateTableDataRow](2.seconds).row.getValue(schema.name).getOrElse("") == "dummyName")
-//      assert(expectMsgType[UpdateTableDataRow](2.seconds).row.getValue(schema.name).getOrElse("") == "dummyName")
-//    }
-//    finally {
-//      converterRef.stop()
-//    }
-//  }
 
   //"MdTableDataConverter" should "register itself to market data update on preStart()" in {}
   //"MdTableDataConverter" should "register itself to market data update again on restart" in {}

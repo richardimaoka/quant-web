@@ -8,12 +8,12 @@ case class SimpleStockModel(
                         name:   TableDataStringField,
                         price:  TableDataDoubleField,
                         volume: TableDataDoubleField )
-  extends TabularDataModel {
+  extends TableDataModel {
   override def primaryKey = name.valueString
   override def schema = SimpleStockSchema
 }
 
-object SimpleStockSchema extends TabularDataSchema{
+object SimpleStockSchema extends TableDataSchema{
   override def columns = List(
     TableDataStringColumn( "name" ),
     TableDataDoubleColumn( "price" ),

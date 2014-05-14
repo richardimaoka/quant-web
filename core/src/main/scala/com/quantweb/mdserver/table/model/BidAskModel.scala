@@ -1,5 +1,6 @@
 package com.quantweb.mdserver.table.model
 
+import com.quantweb.mdserver.table._
 import com.quantweb.mdserver.table.TableDataStringField
 import com.quantweb.mdserver.table.TableDataStringColumn
 import com.quantweb.mdserver.table.TableDataDoubleField
@@ -15,13 +16,13 @@ case class BidAskModel(
   ask:       TableDataDoubleField,
   bidSize:   TableDataDoubleField,
   askSize:   TableDataDoubleField
-)
-  extends TabularDataModel {
+) extends TableDataModel {
+
   override def primaryKey = assetName.valueString
   override def schema = BidAskSchema
 }
 
-object BidAskSchema extends TabularDataSchema{
+object BidAskSchema extends TableDataSchema{
   override def columns = List(
     TableDataStringColumn( "assetName" ),
     TableDataDoubleColumn( "bidSize" ),

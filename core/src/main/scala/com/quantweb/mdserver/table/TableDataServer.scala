@@ -7,26 +7,26 @@ import com.quantweb.mdserver.table.TableDataServer.SendEntireTableData
 import com.quantweb.mdserver.table.TableDataServer.SendTableDataSchema
 import com.quantweb.mdserver.table.TableDataServer.ClientStartup
 import akka.routing.{BroadcastRoutingLogic, Router}
-import com.quantweb.mdserver.table.model.{TabularDataSchema, TabularDataModel}
+import com.quantweb.mdserver.table.model.{TableDataSchema, TableDataModel}
 
-class TableDataServer( val schema: TabularDataSchema ) extends Actor {
+class TableDataServer( val schema: TableDataSchema ) extends Actor {
   val logger = LogManager.getLogger(this.getClass().getName())
 
   var broadcastRouter = Router( BroadcastRoutingLogic() )
 
-  var tableData: Map[String, TabularDataModel] = Map[String, TabularDataModel]()
-  def updateInternalTableData( row: TabularDataModel ): Unit = tableData += (row.primaryKey -> row)
+  var tableData: Map[String, TableDataModel] = Map[String, TableDataModel]()
+  def updateInternalTableData( row: TableDataModel ): Unit = tableData += (row.primaryKey -> row)
 
-  def broadcastRow(row: TabularDataModel): Unit = broadcastRouter.route( row,    self )
+  def broadcastRow(row: TableDataModel): Unit = broadcastRouter.route( row,    self )
   def broadcastSchema():                   Unit = broadcastRouter.route( schema, self )
 
-  def sendRow(client: ActorRef, row: TabularDataModel): Unit = client ! row
+  def sendRow(client: ActorRef, row: TableDataModel): Unit = client ! row
   def sendSchema(client: ActorRef):                     Unit = client ! schema
 
   def registerClient(client: ActorRef):   Unit = { broadcastRouter = broadcastRouter.addRoutee(client) }
   def unregisterClient(client: ActorRef): Unit = { broadcastRouter = broadcastRouter.removeRoutee(client) }
 
-  def processRowUpdateMessage(row: TabularDataModel): Unit = {
+  def processRowUpdateMessage(row: TableDataModel): Unit = {
     logger.info("received: {}", row)
     if( row.schema == schema ){
         updateInternalTableData(row)
@@ -63,7 +63,7 @@ class TableDataServer( val schema: TabularDataSchema ) extends Actor {
   }
 
   override def receive = {
-    case msg: TabularDataModel    => processRowUpdateMessage(msg)
+    case msg: TableDataModel    => processRowUpdateMessage(msg)
     case msg: ClientMessageCase => processClientMessage(msg)
   }
 }

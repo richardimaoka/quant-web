@@ -6,12 +6,12 @@ import com.quantweb.mdserver.table.TableDataIntegerField
 import com.quantweb.mdserver.table.TableDataDoubleField
 
 case class SampleModel(name: TableDataStringField, height: TableDataDoubleField, age: TableDataIntegerField )
-extends TabularDataModel {
+extends TableDataModel {
   override def primaryKey = name.valueString
   override def schema = SampleModelSchema
 }
 
-object SampleModelSchema extends TabularDataSchema{
+object SampleModelSchema extends TableDataSchema{
   override def columns = List(
     TableDataStringColumn( "name" ),
     TableDataDoubleColumn( "height" ),

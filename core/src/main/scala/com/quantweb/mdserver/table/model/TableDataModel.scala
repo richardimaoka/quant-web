@@ -6,11 +6,11 @@ import com.quantweb.mdserver.table.TableDataColumn
  * Created by nishyu on 2014/05/06.
  */
 
-trait TabularDataModel{
+trait TableDataModel{
   def primaryKey: String
-  def schema: TabularDataSchema
+  def schema: TableDataSchema
 }
 
-trait TabularDataSchema{
+trait TableDataSchema{
   def columns: List[TableDataColumn]
 }
