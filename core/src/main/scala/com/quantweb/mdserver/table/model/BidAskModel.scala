@@ -13,8 +13,8 @@ case class BidAskModel(
   assetName: TableDataStringField,
   bid:       TableDataDoubleField,
   ask:       TableDataDoubleField,
-  askSize:   TableDataDoubleField,
-  bidSize:   TableDataDoubleField
+  bidSize:   TableDataDoubleField,
+  askSize:   TableDataDoubleField
 )
   extends TabularDataModel {
   override def primaryKey = assetName.valueString
