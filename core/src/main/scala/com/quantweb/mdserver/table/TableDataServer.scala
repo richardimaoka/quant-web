@@ -18,7 +18,7 @@ class TableDataServer( val schema: TableDataSchema ) extends Actor {
   def updateInternalTableData( row: TableDataModel ): Unit = tableData += (row.primaryKey -> row)
 
   def broadcastRow(row: TableDataModel): Unit = broadcastRouter.route( row,    self )
-  def broadcastSchema():                   Unit = broadcastRouter.route( schema, self )
+  def broadcastSchema():                 Unit = broadcastRouter.route( schema, self )
 
   def sendRow(client: ActorRef, row: TableDataModel): Unit = client ! row
   def sendSchema(client: ActorRef):                     Unit = client ! schema
