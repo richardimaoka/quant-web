@@ -29,7 +29,7 @@ class UserRequestManagerTest extends TestKit( ActorSystem("UserRequestManagerTes
     override val serviceManager = ServiceManagerMock
   }
 
-  "UserRequestManager" should "regiester a user" in {
+  "UserRequestManager" should "register a user" in {
     val managerRef = TestActorRef[UserRequestManager](Props( new UserRequestManager ))
     managerRef ! RegisterUser( "user1" )
     managerRef.underlyingActor.userMap.get("user1") shouldBe a [Some[_]]
