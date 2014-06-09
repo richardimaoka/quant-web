@@ -19,6 +19,8 @@ libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "2.0" % "test" withSources() withJavadoc(),
     "org.scalacheck" %% "scalacheck" % "1.11.1" % "test" withSources() withJavadoc(),
     "org.slf4j" % "slf4j-nop" % "1.6.4",
-    "org.specs2" %% "specs2" % "2.3.6" % "test" withSources() withJavadoc()
+    "org.specs2" %% "specs2" % "2.3.6" % "test" withSources() withJavadoc(),
+    "joda-time" % "joda-time" % "2.3"  withSources() withJavadoc(),
+    "org.joda" % "joda-convert" % "1.6"  withSources() withJavadoc()
 )
 
