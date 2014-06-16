@@ -7,8 +7,8 @@ import org.joda.time.DateTime
  */
 case class Order(
   assetName: String,
-  price: Double,
-  quantity: Double,
+  price: FormattedNumber,
+  quantity: FormattedNumber,
   buySell: String,
   id: String,
   timeCreated: DateTime

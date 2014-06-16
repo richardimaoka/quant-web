@@ -20,4 +20,6 @@ class FormattedNumber(number: Double, decimalPoint: Int) {
 
 object FormattedNumber{
   def apply(number: Double, decimalPoint: Int) = new FormattedNumber(number: Double, decimalPoint: Int)
+
+  implicit def doubleToFormattedNumber( number: Double ) = FormattedNumber( number, 2 )
 }
