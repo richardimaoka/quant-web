@@ -9,7 +9,7 @@ case class Order(
   assetName: String,
   price: FormattedNumber,
   quantity: FormattedNumber,
-  buySell: String,
+  buySell: BuySell,
   id: String,
   timeCreated: DateTime
 )
