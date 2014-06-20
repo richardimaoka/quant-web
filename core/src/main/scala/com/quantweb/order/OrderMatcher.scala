@@ -8,14 +8,19 @@ import OrderMatcher.SortOrderingSell
 /**
  * Created by nishyu on 2014/06/21.
  */
-class OrderMatcher extends Actor {
+
+/*
+** assetName: An OrderMatcher actor only takes care of one asset
+ */
+class OrderMatcher(assetName: String) extends Actor {
   //variable reference of immutable data pattern:
   //  safe (read-only) operation on immutable data  on any thread, while updating the data is just to alter the reference
   var sortedBuyOrders = SortedSet[Order]()(SortOrderingBuy)
   var sortedSellOrders = SortedSet[Order]()(SortOrderingSell)
 
   def receive = {
-    case order: Order => {
+    //only if assetName is matched
+    case order: Order if order.assetName == assetName => {
       order.buySell match {
         case Buy  => sortedBuyOrders  += order
         case Sell => sortedSellOrders += order

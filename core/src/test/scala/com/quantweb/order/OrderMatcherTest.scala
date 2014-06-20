@@ -52,7 +52,7 @@ class OrderMatcherObjectTest extends FlatSpec with Matchers {
 
 class OrderMatcherClassTest extends TestKit(ActorSystem("OrderMatcherClassTest")) with FlatSpecLike with Matchers {
   "OrderMatcher" should "store buy and sell orders separately in orders" in {
-    val serverRef = TestActorRef[OrderMatcher](Props(new OrderMatcher))
+    val serverRef = TestActorRef[OrderMatcher](Props(new OrderMatcher("assetA")))
     val t = new DateTime()
     serverRef ! Order("assetA", 104, 10, Buy, "orderID3", t)
     serverRef ! Order("assetA", 104, 10, Buy, "orderID4", t)
@@ -65,6 +65,18 @@ class OrderMatcherClassTest extends TestKit(ActorSystem("OrderMatcherClassTest")
     serverRef ! Order("assetA", 103, 10, Buy, "orderID6", t)
     serverRef ! Order("assetA", 102, 10, Buy, "orderID7", t)
     serverRef.underlyingActor.sortedBuyOrders.toList map (x => x.id) shouldEqual (List("orderID1", "orderID2", "orderID3", "orderID4", "orderID5", "orderID6", "orderID7"))
+    serverRef.underlyingActor.sortedSellOrders.toList map (x => x.id) shouldEqual (List("orderID1", "orderID2", "orderID3"))
+  }
+
+  it should "not accept orders for different asset" in {
+    val serverRef = TestActorRef[OrderMatcher](Props(new OrderMatcher("assetA")))
+    val t = new DateTime()
+    serverRef ! Order("assetA", 107, 10, Sell, "orderID3", t)
+    serverRef ! Order("assetA", 106, 10, Sell, "orderID1", t)
+    serverRef ! Order("assetA", 106, 10, Sell, "orderID2", t)
+    serverRef ! Order("assetB", 108, 10, Sell, "orderID4", t)
+    serverRef ! Order("assetB", 109, 10, Sell, "orderID5", t)
+    serverRef ! Order("assetB", 110, 10, Sell, "orderID6", t)
     serverRef.underlyingActor.sortedSellOrders.toList map (x => x.id) shouldEqual (List("orderID1", "orderID2", "orderID3"))
   }
 }
