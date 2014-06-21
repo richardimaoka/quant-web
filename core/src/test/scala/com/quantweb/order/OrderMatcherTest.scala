@@ -7,9 +7,6 @@ import com.quantweb.order.OrderMatcher.{SortOrderingBuy, SortOrderingSell}
 import akka.testkit.{TestActorRef, TestKit}
 import akka.actor.{Props, ActorSystem}
 
-/**
- * Created by nishyu on 2014/06/15.
- */
 class OrderMatcherObjectTest extends FlatSpec with Matchers {
 
   "SortOrderingBuy and SortOrderingSell" should "sort orders by price" in {

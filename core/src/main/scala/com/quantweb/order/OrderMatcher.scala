@@ -5,10 +5,6 @@ import scala.collection.SortedSet
 import OrderMatcher.SortOrderingBuy
 import OrderMatcher.SortOrderingSell
 
-/**
- * Created by nishyu on 2014/06/21.
- */
-
 /*
 ** assetName: An OrderMatcher actor only takes care of one asset
  */
