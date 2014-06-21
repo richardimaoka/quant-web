@@ -23,7 +23,7 @@ class OrderMatcherObjectTest extends FlatSpec with Matchers {
     b.toList map (x => x.id) shouldEqual (List("orderID1", "orderID2", "orderID3"))
   }
 
-  "SortOrderingBuy" should "sort orders by time" in {
+  it should "sort orders by time" in {
     var a = SortedSet[Order]()(SortOrderingBuy)
     val t = new DateTime()
     a += Order("assetA", 105, 10, Buy, "orderID3", t.plus(Hours.ONE))
@@ -32,7 +32,7 @@ class OrderMatcherObjectTest extends FlatSpec with Matchers {
     a.toList map (x => x.id) shouldEqual (List("orderID1", "orderID2", "orderID3"))
   }
 
-  "SortOrderingBuy" should "should sort orderes by price and then time" in {
+  it should "should sort orderes by price and then time" in {
     var a = SortedSet[Order]()(SortOrderingBuy)
     val t = new DateTime()
     a += Order("assetA", 104, 10, Buy, "orderID3", t.minus(Seconds.THREE))
@@ -45,6 +45,28 @@ class OrderMatcherObjectTest extends FlatSpec with Matchers {
     a += Order("assetA", 103, 10, Buy, "orderID5", t.minus(Minutes.THREE))
     a.toList map (x => x.id) shouldEqual (List("orderID1", "orderID2", "orderID3", "orderID4", "orderID5", "orderID6", "orderID7", "orderID8"))
   }
+
+  "OrderMatcher.orderBookEntries()" should "create orderBookEnty map" in {
+    var a = SortedSet[Order]()(SortOrderingBuy)
+    a += Order("assetA", 101, 10, Buy, "orderID3", new DateTime())
+    a += Order("assetA", 102, 10, Buy, "orderID1", new DateTime())
+    a += Order("assetA", 104, 10, Buy, "orderID2", new DateTime())
+
+    var b = SortedSet[Order]()(SortOrderingSell)
+    b += Order("assetA", 104, 10, Sell, "orderID2", new DateTime())
+
+    OrderMatcher.orderBookEntries(a, b, 2) shouldEqual Map[String, OrderBookEntry](
+      "104.00" -> OrderBookEntry("assetA", 104, 10, 10),
+      "102.00" -> OrderBookEntry("assetA", 102, 10, 0)
+    )
+
+    OrderMatcher.orderBookEntries(a, b, 3) shouldEqual Map[String, OrderBookEntry](
+      "104.00" -> OrderBookEntry("assetA", 104, 10, 10),
+      "102.00" -> OrderBookEntry("assetA", 102, 10, 0),
+      "101.00" -> OrderBookEntry("assetA", 101, 10, 0)
+    )
+  }
+
 }
 
 class OrderMatcherClassTest extends TestKit(ActorSystem("OrderMatcherClassTest")) with FlatSpecLike with Matchers {

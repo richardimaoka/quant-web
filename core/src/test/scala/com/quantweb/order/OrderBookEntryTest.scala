@@ -1,6 +1,7 @@
 package com.quantweb.order
 
 import org.scalatest.{Matchers, FlatSpec}
+import org.joda.time.DateTime
 
 class OrderBookEntryTest extends FlatSpec with Matchers {
 
@@ -22,5 +23,10 @@ class OrderBookEntryTest extends FlatSpec with Matchers {
       OrderBookEntry("assetA", FormattedNumber(100.00, 3), 10, 0) + OrderBookEntry("assetA", 100.00, 10, 0)
     }
     exception.getMessage shouldEqual "requirement failed: OrderBookEntry class's + operation requires (FormattedNumber) price to be same, but they are different: this.price = 100.000 != other.price = 100.00"
+  }
+
+  "OrderBokEntry companion object" should "construct an OrderBookEntry from order" in {
+    OrderBookEntry(Order("assetA", 100, 10, Buy, "orderID1", new DateTime())) shouldEqual OrderBookEntry("assetA", 100, 10, 0)
+    OrderBookEntry(Order("assetA", 100, 20, Sell, "orderID2", new DateTime())) shouldEqual OrderBookEntry("assetA", 100, 0, 20)
   }
 }

@@ -16,3 +16,10 @@ case class OrderBookEntry(
     OrderBookEntry(assetName, price, this.quantityBuy + other.quantityBuy, this.quantitySell + other.quantitySell)
   }
 }
+
+object OrderBookEntry{
+  def apply(order: Order): OrderBookEntry = order.buySell match {
+    case Buy => OrderBookEntry(order.assetName, order.price, order.quantity, 0)
+    case Sell => OrderBookEntry(order.assetName, order.price, 0, order.quantity)
+  }
+}
