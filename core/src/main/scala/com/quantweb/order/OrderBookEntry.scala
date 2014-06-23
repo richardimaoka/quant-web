@@ -15,6 +15,8 @@ case class OrderBookEntry(
 
     OrderBookEntry(assetName, price, this.quantityBuy + other.quantityBuy, this.quantitySell + other.quantitySell)
   }
+
+  def shortString = s"${price} : ${quantityBuy} | ${quantitySell}"
 }
 
 object OrderBookEntry{
