@@ -10,8 +10,9 @@ object OrderMatchAlgorithm {
       return ErrorSameBuySell( s"Match algorithm expects different buy/sell, but new order = ${newOrder.buySell} and existing order = ${existingOrder.buySell}" )
     else if (newOrder.assetName != existingOrder.assetName)
       return ErrorDifferentAssets( s"Match algorithm expects same assets, but new order = ${newOrder.assetName} and existing order = ${existingOrder.assetName}" )
-    else {
-      SomethingElse
-    }
+    else if( newOrder.buySell == Buy && newOrder.price <= existingOrder.price )
+      NoFill
+    else
+      throw new Error("kaboom")
   }
 }

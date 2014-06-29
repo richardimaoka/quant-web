@@ -1,9 +1,11 @@
 package com.quantweb.order
 
-class FormattedNumber(number: Double, val decimalPoint: Int) {
+class FormattedNumber(private val number: Double, val decimalPoint: Int) extends Ordered[FormattedNumber] {
   require(decimalPoint >= 0, s"decimal point (2nd argument) of FormattedNumber() must be positive, but it was ${decimalPoint}")
 
-  val formatter: String = s"%.${decimalPoint}f"   //(e.g.) if decimalPoint = 2, formatter = "%.2f"
+  //(e.g.) if decimalPoint = 2, formatter = "%.2f"
+  val formatter: String = s"%.${decimalPoint}f"
+
   lazy val representation: String = {
     val rep = formatter.format(number)
     if (rep.toDouble.signum == 0)
@@ -14,10 +16,16 @@ class FormattedNumber(number: Double, val decimalPoint: Int) {
 
   override def toString = representation
 
+  def toDouble: Double = representation.toDouble
+
   override def hashCode = representation.hashCode
 
-  override def equals(other: Any) = other match {
-    case that: FormattedNumber => this.toString == that.toString
+  override def equals(that: Any): Boolean = that match {
+    case that: FormattedNumber =>
+      if (this.toDouble.signum == 0 && that.toDouble.signum == 0)
+        return true
+      else
+        return this.toString == that.toString
     case _ => false
   }
 
@@ -25,7 +33,12 @@ class FormattedNumber(number: Double, val decimalPoint: Int) {
   ** + operator:
   *  Performs + operation on the formatted number, not the 1st argument = number in the constructor
    */
-  def +(other: FormattedNumber): FormattedNumber = FormattedNumber(this.toString.toDouble + other.toString.toDouble, Math.max(this.decimalPoint, other.decimalPoint))
+  def +(that: FormattedNumber): FormattedNumber = FormattedNumber(this.toDouble + that.toDouble, Math.max(this.decimalPoint, that.decimalPoint))
+
+  override def compare(that: FormattedNumber): Int = {
+    val maxDecimalPoint = Math.max(this.decimalPoint, that.decimalPoint)
+    FormattedNumber(this.toDouble, maxDecimalPoint).toDouble.compare(FormattedNumber(that.toDouble, maxDecimalPoint).toDouble)
+  }
 }
 
 object FormattedNumber {

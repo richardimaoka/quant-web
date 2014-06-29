@@ -11,19 +11,26 @@ class OrderMatchAlgorithmTest extends FlatSpec with Matchers {
     OrderMatchAlgorithm.run(
       Order("assetA", 100, 10, Buy, "buy-order1", new DateTime()),
       Order("assetB", 100, 10, Sell, "sell-order1", new DateTime())
-    ) shouldEqual ErrorDifferentAssets( "Match algorithm expects same assets, but new order = assetA and existing order = assetB")
+    ) shouldEqual ErrorDifferentAssets("Match algorithm expects same assets, but new order = assetA and existing order = assetB")
   }
 
-  "OrderMatchAlgorithm.run()" should "not match orders if both are Buy & Buy, or Sell & Sell" in {
+  it should "not match orders if both are Buy & Buy, or Sell & Sell" in {
     OrderMatchAlgorithm.run(
       Order("assetA", 100, 10, Buy, "buy-order1", new DateTime()),
       Order("assetA", 100, 10, Buy, "buy-order2", new DateTime())
-    )  shouldEqual ErrorSameBuySell( "Match algorithm expects different buy/sell, but new order = Buy and existing order = Buy")
+    ) shouldEqual ErrorSameBuySell("Match algorithm expects different buy/sell, but new order = Buy and existing order = Buy")
 
     OrderMatchAlgorithm.run(
       Order("assetA", 100, 10, Sell, "sell-order1", new DateTime()),
       Order("assetA", 100, 10, Sell, "sell-order2", new DateTime())
-    )  shouldEqual ErrorSameBuySell( "Match algorithm expects different buy/sell, but new order = Sell and existing order = Sell")
+    ) shouldEqual ErrorSameBuySell("Match algorithm expects different buy/sell, but new order = Sell and existing order = Sell")
+  }
+
+  it should "give no fill if 'in' price is worse than existing" in {
+    OrderMatchAlgorithm.run(
+      Order("assetA", 100, 10, Buy,  "buy-order1",  new DateTime()),
+      Order("assetA", 101, 10, Sell, "sell-order1", new DateTime())
+    ) shouldEqual NoFill
   }
 
   //new order unfilled at all (put into the existing order queue later)

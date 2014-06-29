@@ -19,16 +19,23 @@ class FormattedNumberTest extends FlatSpec with Matchers {
     FormattedNumber(98.051, 2) should not equal (FormattedNumber(98.055, 2))
   }
 
+  it should "be equal for zeros (special equality on zeros)" in {
+    //0 == 0.0
+    FormattedNumber(0, 0) shouldEqual FormattedNumber(0, 1)
+    //0.000 == - 0.00000
+    FormattedNumber(0, 3) shouldEqual FormattedNumber(-0.000001, 5)
+  }
+
   it should "not be equal if decimal points are different" in {
     FormattedNumber(98.05, 2) should not equal (FormattedNumber(98.05, 3))
   }
 
   it should "take a negative number in the 1st argument" in {
-    FormattedNumber( -1, 5 ).toString shouldEqual "-1.00000"
+    FormattedNumber(-1, 5).toString shouldEqual "-1.00000"
   }
 
   it should "display 0.00.. by toString method if number is zero" in {
-    FormattedNumber( -0.001, 2 ).toString shouldEqual "0.00"
+    FormattedNumber(-0.001, 2).toString shouldEqual "0.00"
   }
 
   it should "perform + operation" in {
@@ -58,5 +65,22 @@ class FormattedNumberTest extends FlatSpec with Matchers {
     FormattedNumber(50.051, 2) + FormattedNumber(-50.051, 3) shouldEqual FormattedNumber(-0.001, 3)
   }
 
+  it should "compare two FormattedNumbers" in {
+    //0.1 < 0.2
+    FormattedNumber(0.1, 1) should be < FormattedNumber(0.2, 1)
+    //0.1 > -0.2
+    FormattedNumber(0.1, 1) should be > FormattedNumber(-0.2, 1)
+    //0.1
+    FormattedNumber(0.14, 1) should be < FormattedNumber(0.13, 2)
+    //0.1 == 0.1
+    FormattedNumber(0.1, 1) should not be > (FormattedNumber(0.1, 1))
+    FormattedNumber(0.1, 1) should not be < (FormattedNumber(0.1, 1))
+    //0.10 == 0.1
+    println("********************************")
+    println(FormattedNumber(FormattedNumber(0.1, 2).toDouble, 2))
+    println(FormattedNumber(FormattedNumber(0.1, 1).toDouble, 2))
+    FormattedNumber(0.1, 2) should not be > (FormattedNumber(0.1, 1))
+    FormattedNumber(0.1, 2) should not be < (FormattedNumber(0.1, 1))
+  }
 
 }
