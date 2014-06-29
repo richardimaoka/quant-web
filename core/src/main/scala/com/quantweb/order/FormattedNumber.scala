@@ -2,6 +2,7 @@ package com.quantweb.order
 
 class FormattedNumber(number: Double, val decimalPoint: Int) {
   require(decimalPoint >= 0)
+  require(number.signum > -1)
 
   val formatter: String = s"%.${decimalPoint}f" //(e.g.) if decimalPoint = 2, formatter = "%.2f"
   val representation: String = formatter.format(number)
