@@ -1,11 +1,16 @@
 package com.quantweb.order
 
 class FormattedNumber(number: Double, val decimalPoint: Int) {
-  require(decimalPoint >= 0)
-  require(number.signum > -1)
+  require(decimalPoint >= 0, s"decimal point (2nd argument) of FormattedNumber() must be positive, but it was ${decimalPoint}")
 
-  val formatter: String = s"%.${decimalPoint}f" //(e.g.) if decimalPoint = 2, formatter = "%.2f"
-  val representation: String = formatter.format(number)
+  val formatter: String = s"%.${decimalPoint}f"   //(e.g.) if decimalPoint = 2, formatter = "%.2f"
+  lazy val representation: String = {
+    val rep = formatter.format(number)
+    if (rep.toDouble.signum == 0)
+      formatter.format(0.0)
+    else
+      rep
+  }
 
   override def toString = representation
 
