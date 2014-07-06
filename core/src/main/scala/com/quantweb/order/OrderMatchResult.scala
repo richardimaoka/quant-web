@@ -12,9 +12,9 @@ case class ErrorDifferentAssets(errorMessage: String) extends OrderMatchResult(0
 
 case object NoFill extends OrderMatchResult(0)
 
-case class InFullyFilled_ExistingFullyFilled(filledQty: FormattedNumber) extends OrderMatchResult(filledQty)
+case class IncomingFullyFilled_ExistingFullyFilled(filledQty: FormattedNumber) extends OrderMatchResult(filledQty)
 
-case class InFullyFilled_ExistingPartiallyFilled(filledQty: FormattedNumber) extends OrderMatchResult(filledQty)
+case class IncomingFullyFilled_ExistingPartiallyFilled(filledQty: FormattedNumber) extends OrderMatchResult(filledQty)
 
-case class InPartiallyFilled_ExistingFullyFilled(filledQty: FormattedNumber) extends OrderMatchResult(filledQty)
+case class IncomingPartiallyFilled_ExistingFullyFilled(filledQty: FormattedNumber) extends OrderMatchResult(filledQty)
 

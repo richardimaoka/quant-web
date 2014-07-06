@@ -70,17 +70,18 @@ class FormattedNumberTest extends FlatSpec with Matchers {
     FormattedNumber(0.1, 1) should be < FormattedNumber(0.2, 1)
     //0.1 > -0.2
     FormattedNumber(0.1, 1) should be > FormattedNumber(-0.2, 1)
-    //0.1
+    //0.1 < 0.13, tricky case!
     FormattedNumber(0.14, 1) should be < FormattedNumber(0.13, 2)
     //0.1 == 0.1
     FormattedNumber(0.1, 1) should not be > (FormattedNumber(0.1, 1))
     FormattedNumber(0.1, 1) should not be < (FormattedNumber(0.1, 1))
+    FormattedNumber(0.1, 1) should be >= (FormattedNumber(0.1, 1))
+    FormattedNumber(0.1, 1) should be <= (FormattedNumber(0.1, 1))
     //0.10 == 0.1
-    println("********************************")
-    println(FormattedNumber(FormattedNumber(0.1, 2).toDouble, 2))
-    println(FormattedNumber(FormattedNumber(0.1, 1).toDouble, 2))
     FormattedNumber(0.1, 2) should not be > (FormattedNumber(0.1, 1))
     FormattedNumber(0.1, 2) should not be < (FormattedNumber(0.1, 1))
+    FormattedNumber(0.1, 2) should be >= (FormattedNumber(0.1, 1))
+    FormattedNumber(0.1, 2) should be <= (FormattedNumber(0.1, 1))
   }
 
 }
