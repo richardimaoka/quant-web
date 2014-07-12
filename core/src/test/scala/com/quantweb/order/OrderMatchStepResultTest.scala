@@ -25,28 +25,28 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
 
     result.updatedIncomingOrder shouldEqual None
     result.updatedExistingOrder shouldEqual None
-    result.filledOrder shouldEqual Some(new FilledOrder(sell, buy))
+    result.filledOrder shouldEqual Some(new FilledOrder(sell.withNewPrice(100), buy))
   }
 
   "IncomingFullyFilled_ExistingPartiallyFilled" should "have empty incoming & remaining existing orders, with some filled order" in {
     val t = new DateTime()
     val sell = Order("assetA", 99, 10, Sell, "sell-order1", t)
     val buy = Order("assetA", 100, 20, Buy, "buy-order1", t)
-    val result = IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 10)
+    val result = IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 100, 10)
 
     result.updatedIncomingOrder shouldEqual None
     result.updatedExistingOrder shouldEqual Some(Order("assetA", 100, 10, Buy, "buy-order1", t))
-    result.filledOrder shouldEqual Some(new FilledOrder(sell, Order("assetA", 100, 10, Buy, "buy-order1", t)))
+    result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 100, 10, Sell, "sell-order1", t), Order("assetA", 100, 10, Buy, "buy-order1", t)))
   }
 
   "IncomingPartiallyFilled_ExistingFullyFilled" should "have remaining incoming & empty existing orders, with some filled order" in {
     val t = new DateTime()
     val sell = Order("assetA", 99, 30, Sell, "sell-order1", t)
     val buy = Order("assetA", 100, 15, Buy, "buy-order1", t)
-    val result = IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 15)
+    val result = IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 100, 15)
 
     result.updatedIncomingOrder shouldEqual Some(Order("assetA", 99, 15, Sell, "sell-order1", t))
     result.updatedExistingOrder shouldEqual None
-    result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 99, 15, Sell, "sell-order1", t), buy))
+    result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 100, 15, Sell, "sell-order1", t), Order("assetA", 100, 15, Buy, "buy-order1", t)))
   }
 }

@@ -77,25 +77,25 @@ class OrderMatchAlgorithmStepTest extends FlatSpec with Matchers {
   it should "partially fill incoming & fully fill existing, if incoming buy price = existing sell price, and incoming quantity > existing quantity" in {
     val buy = Order("assetA", 100, 20, Buy, "buy-order1", new DateTime())
     val sell = Order("assetA", 100, 10, Sell, "sell-order1", new DateTime())
-    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(buy, sell, 10)
+    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(buy, sell, 100, 10)
   }
 
   it should "partially fill incoming & fully fill existing, if incoming buy price > existing sell price, and incoming quantity > existing quantity" in {
     val buy = Order("assetA", 101, 52, Buy, "buy-order1", new DateTime())
     val sell = Order("assetA", 100, 50, Sell, "sell-order1", new DateTime())
-    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(buy, sell, 50)
+    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(buy, sell, 100, 50)
   }
 
   it should "partially fill incoming & fully fill existing, if incoming sell price = existing buy price, and incoming quantity > existing quantity" in {
     val sell = Order("assetA", 100, 200, Sell, "sell-order1", new DateTime())
     val buy = Order("assetA", 100, 100, Buy, "buy-order1", new DateTime())
-    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 100)
+    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 100, 100)
   }
 
   it should "partially fill incoming & fully fill existing, if incoming sell price < existing buy price, and incoming quantity > existing quantity" in {
     val sell = Order("assetA", 100, 200, Sell, "sell-order1", new DateTime())
     val buy = Order("assetA", 101, 100, Buy, "buy-order1", new DateTime())
-    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 100)
+    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 101, 100)
   }
 
   //********************************************************************************
@@ -104,25 +104,25 @@ class OrderMatchAlgorithmStepTest extends FlatSpec with Matchers {
   it should "fully fill incoming & partially fill existing, if incoming buy price = existing sell price, and incoming quantity < existing quantity" in {
     val buy = Order("assetA", 100, 10, Buy, "buy-order1", new DateTime())
     val sell = Order("assetA", 100, 20, Sell, "sell-order1", new DateTime())
-    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(buy, sell, 10)
+    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(buy, sell, 100, 10)
   }
 
   it should "fully fill incoming & partially fill existing, if incoming buy price > existing sell price, and incoming quantity < existing quantity" in {
     val buy = Order("assetA", 101, 10, Buy, "buy-order1", new DateTime())
     val sell = Order("assetA", 100, 20, Sell, "sell-order1", new DateTime())
-    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(buy, sell, 10)
+    OrderMatchAlgorithm.step(buy, sell) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(buy, sell, 100, 10)
   }
 
   it should "fully fill incoming & partially fill existing, if incoming sell price = existing buy price, and incoming quantity < existing quantity" in {
     val sell = Order("assetA", 100, 100, Sell, "sell-order1", new DateTime())
     val buy = Order("assetA", 100, 200, Buy, "buy-order1", new DateTime())
-    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 100)
+    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 100, 100)
   }
 
   it should "fully fill incoming & partially fill existing, if incoming sell price < existing buy price, and incoming quantity < existing quantity" in {
     val sell = Order("assetA", 100, 100, Sell, "sell-order1", new DateTime())
     val buy = Order("assetA", 101, 200, Buy, "buy-order1", new DateTime())
-    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 100)
+    OrderMatchAlgorithm.step(sell, buy) shouldEqual IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 101, 100)
   }
 }
 

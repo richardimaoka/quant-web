@@ -26,9 +26,9 @@ object OrderMatchAlgorithm {
         if (incomingOrder.quantity == existingOrder.quantity)
           IncomingFullyFilled_ExistingFullyFilled(incomingOrder, existingOrder)
         else if (incomingOrder.quantity < existingOrder.quantity)
-          IncomingFullyFilled_ExistingPartiallyFilled(incomingOrder, existingOrder, incomingOrder.quantity)
+          IncomingFullyFilled_ExistingPartiallyFilled(incomingOrder, existingOrder, existingOrder.price, incomingOrder.quantity)
         else if (incomingOrder.quantity > existingOrder.quantity)
-          IncomingPartiallyFilled_ExistingFullyFilled(incomingOrder, existingOrder, existingOrder.quantity)
+          IncomingPartiallyFilled_ExistingFullyFilled(incomingOrder, existingOrder, existingOrder.price, existingOrder.quantity)
         else
           throw new Exception(s"This line of code should never be reached - order OrderMatchAlgorithm price condition is met, but cannot compare order quantities properly\n $incomingOrder \n $existingOrder")
       }

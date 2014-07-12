@@ -29,22 +29,22 @@ case class IncomingFullyFilled_ExistingFullyFilled(incomingOrder: Order, existin
   extends OrderMatchStepResult(
     None, //updatedIncomingOrder
     None, //updatedExistingOrder
-    Some(FilledOrder(incomingOrder, existingOrder, incomingOrder.quantity) //filledOrder
+    Some(FilledOrder(incomingOrder, existingOrder, existingOrder.price, existingOrder.quantity) //filledOrder
     )
   )
 
-case class IncomingFullyFilled_ExistingPartiallyFilled(incomingOrder: Order, existingOrder: Order, filledQuantity: FormattedNumber)
+case class IncomingFullyFilled_ExistingPartiallyFilled(incomingOrder: Order, existingOrder: Order, filledPrice: FormattedNumber, filledQuantity: FormattedNumber)
   extends OrderMatchStepResult(
     None, //updatedIncomingOrder
     Some(existingOrder.withNewQuantity(existingOrder.quantity - filledQuantity)), //updatedExistingOrder
-    Some(FilledOrder(incomingOrder, existingOrder, filledQuantity) //filledOrder
+    Some(FilledOrder(incomingOrder, existingOrder, filledPrice, filledQuantity) //filledOrder
     )
   )
 
-case class IncomingPartiallyFilled_ExistingFullyFilled(incomingOrder: Order, existingOrder: Order, filledQuantity: FormattedNumber)
+case class IncomingPartiallyFilled_ExistingFullyFilled(incomingOrder: Order, existingOrder: Order, filledPrice: FormattedNumber, filledQuantity: FormattedNumber)
   extends OrderMatchStepResult(
     Some(incomingOrder.withNewQuantity(incomingOrder.quantity - filledQuantity)), //updatedIncomingOrder
     None, //updatedExistingOrder
-    Some(FilledOrder(incomingOrder, existingOrder, filledQuantity) //filledOrder
+    Some(FilledOrder(incomingOrder, existingOrder, filledPrice,  filledQuantity) //filledOrder
     )
   )
