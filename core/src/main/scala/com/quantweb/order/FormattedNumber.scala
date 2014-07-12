@@ -35,6 +35,12 @@ class FormattedNumber(private val number: Double, val decimalPoint: Int) extends
    */
   def +(that: FormattedNumber): FormattedNumber = FormattedNumber(this.toDouble + that.toDouble, Math.max(this.decimalPoint, that.decimalPoint))
 
+  /*
+  ** - operator:
+  *  Performs - operation on the formatted number, not the 1st argument = number in the constructor
+   */
+  def -(that: FormattedNumber): FormattedNumber = FormattedNumber(this.toDouble - that.toDouble, Math.max(this.decimalPoint, that.decimalPoint))
+
   override def compare(that: FormattedNumber): Int = {
     val maxDecimalPoint = Math.max(this.decimalPoint, that.decimalPoint)
     FormattedNumber(this.toDouble, maxDecimalPoint).toDouble.compare(FormattedNumber(that.toDouble, maxDecimalPoint).toDouble)

@@ -65,6 +65,33 @@ class FormattedNumberTest extends FlatSpec with Matchers {
     FormattedNumber(50.051, 2) + FormattedNumber(-50.051, 3) shouldEqual FormattedNumber(-0.001, 3)
   }
 
+  it should "perform - operation" in {
+    //50.05 - 0.00 = 50.05
+    FormattedNumber(50.051, 2) - FormattedNumber(0, 2) shouldEqual FormattedNumber(50.05, 2)
+    //50.05 - 40.03 = 10.02
+    FormattedNumber(50.051, 2) - FormattedNumber(40.032, 2) shouldEqual FormattedNumber(10.02, 2)
+    //50.05 - 50.05 - 50.05 = -50.05
+    FormattedNumber(50.054, 2) - FormattedNumber(50.045, 2) - FormattedNumber(50.046, 2) shouldEqual FormattedNumber(-50.05, 2)
+  }
+
+  it should "perform - operation, which takes the max decimal point of the two" in {
+    //100.051 - 100.05 = 0.001
+    FormattedNumber(100.051, 3) - FormattedNumber(100.052, 2) shouldEqual FormattedNumber(0.001, 3)
+    //100.05 - 100.052 = -0.002
+    FormattedNumber(100.051, 2) - FormattedNumber(100.052, 3) shouldEqual FormattedNumber(-0.002, 3)
+  }
+
+  it should "perform - operation on negative numbers too" in {
+    //50.05 - 0.00 = 50.05
+    FormattedNumber(50.051, 2) - FormattedNumber(-0, 2) shouldEqual FormattedNumber(50.05, 2)
+    //10.05 - (-5.05) = 15.10
+    FormattedNumber(10.051, 2) - FormattedNumber(-5.054, 2) shouldEqual FormattedNumber(15.10, 2)
+    //50.05 - (-50.05) = 100.10
+    FormattedNumber(50.051, 2) - FormattedNumber(-50.052, 2) shouldEqual FormattedNumber(100.10, 2)
+    //50.05 - (-50.051) = 100.101
+    FormattedNumber(50.051, 2) - FormattedNumber(-50.051, 3) shouldEqual FormattedNumber(100.101, 3)
+  }
+
   it should "compare two FormattedNumbers" in {
     //0.1 < 0.2
     FormattedNumber(0.1, 1) should be < FormattedNumber(0.2, 1)
