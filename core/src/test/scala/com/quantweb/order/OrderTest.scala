@@ -11,4 +11,9 @@ class OrderTest extends FlatSpec with Matchers {
     val t = new DateTime()
     Order("assetA", 100, 10, Buy, "buy-order1", t).withReducedQuantity(5) shouldEqual Order("assetA", 100, 5, Buy, "buy-order1", t)
   }
+
+  "Order" should "create a new order with new quantity withQuantity() method" in {
+    val t = new DateTime()
+    Order("assetA", 100, 10, Buy, "buy-order1", t).withQuantity(4) shouldEqual Order("assetA", 100, 4, Buy, "buy-order1", t)
+  }
 }
