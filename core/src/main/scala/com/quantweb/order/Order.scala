@@ -14,7 +14,5 @@ case class Order(
   timeCreated: DateTime
 )
 {
-  def withReducedQuantity(quantityToReduce: FormattedNumber): Order = Order(assetName, price, quantity - quantityToReduce, buySell, id, timeCreated)
-
-  def withQuantity(newQuantity: FormattedNumber): Order = Order(assetName, price, newQuantity, buySell, id, timeCreated)
+  def withNewQuantity(newQuantity: FormattedNumber): Order = Order(assetName, price, newQuantity, buySell, id, timeCreated)
 }
