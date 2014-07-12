@@ -13,3 +13,6 @@ case class Order(
   id: String,
   timeCreated: DateTime
 )
+{
+  def withReducedQuantity(quantityToReduce: FormattedNumber): Order = Order(assetName, price, quantity - quantityToReduce, buySell, id, timeCreated)
+}
