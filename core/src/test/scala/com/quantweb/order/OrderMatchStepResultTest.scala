@@ -13,8 +13,8 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
     val sell = Order("assetA", 101, 10, Sell, "sell-order1", new DateTime())
     val noFill = NoFill(buy, sell)
 
-    noFill.updatedIncomingOrder shouldEqual Some(buy)
-    noFill.updatedExistingOrder shouldEqual Some(sell)
+    noFill.remainingIncomingOrder shouldEqual Some(buy)
+    noFill.remainingExistingOrder shouldEqual Some(sell)
     noFill.filledOrder shouldEqual None
   }
 
@@ -23,8 +23,8 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
     val buy = Order("assetA", 100, 10, Buy, "buy-order1", new DateTime())
     val result = IncomingFullyFilled_ExistingFullyFilled(sell, buy)
 
-    result.updatedIncomingOrder shouldEqual None
-    result.updatedExistingOrder shouldEqual None
+    result.remainingIncomingOrder shouldEqual None
+    result.remainingExistingOrder shouldEqual None
     result.filledOrder shouldEqual Some(new FilledOrder(sell.withNewPrice(100), buy))
   }
 
@@ -34,8 +34,8 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
     val buy = Order("assetA", 100, 20, Buy, "buy-order1", t)
     val result = IncomingFullyFilled_ExistingPartiallyFilled(sell, buy, 100, 10)
 
-    result.updatedIncomingOrder shouldEqual None
-    result.updatedExistingOrder shouldEqual Some(Order("assetA", 100, 10, Buy, "buy-order1", t))
+    result.remainingIncomingOrder shouldEqual None
+    result.remainingExistingOrder shouldEqual Some(Order("assetA", 100, 10, Buy, "buy-order1", t))
     result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 100, 10, Sell, "sell-order1", t), Order("assetA", 100, 10, Buy, "buy-order1", t)))
   }
 
@@ -45,8 +45,8 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
     val buy = Order("assetA", 100, 15, Buy, "buy-order1", t)
     val result = IncomingPartiallyFilled_ExistingFullyFilled(sell, buy, 100, 15)
 
-    result.updatedIncomingOrder shouldEqual Some(Order("assetA", 99, 15, Sell, "sell-order1", t))
-    result.updatedExistingOrder shouldEqual None
+    result.remainingIncomingOrder shouldEqual Some(Order("assetA", 99, 15, Sell, "sell-order1", t))
+    result.remainingExistingOrder shouldEqual None
     result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 100, 15, Sell, "sell-order1", t), Order("assetA", 100, 15, Buy, "buy-order1", t)))
   }
 }
