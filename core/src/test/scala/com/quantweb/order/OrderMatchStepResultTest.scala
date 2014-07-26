@@ -25,7 +25,7 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
 
     result.remainingIncomingOrder shouldEqual None
     result.remainingExistingOrder shouldEqual None
-    result.filledOrder shouldEqual Some(new FilledOrder(sell.withNewPrice(100), buy))
+    result.filledOrder shouldEqual Some(FilledOrder(sell, buy, 100, 10))
   }
 
   "IncomingFullyFilled_ExistingPartiallyFilled" should "have empty incoming & remaining existing orders, with some filled order" in {
@@ -36,7 +36,7 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
 
     result.remainingIncomingOrder shouldEqual None
     result.remainingExistingOrder shouldEqual Some(Order("assetA", 100, 10, Buy, "buy-order1", t))
-    result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 100, 10, Sell, "sell-order1", t), Order("assetA", 100, 10, Buy, "buy-order1", t)))
+    result.filledOrder shouldEqual Some(FilledOrder(sell, buy, 100, 10))
   }
 
   "IncomingPartiallyFilled_ExistingFullyFilled" should "have remaining incoming & empty existing orders, with some filled order" in {
@@ -47,6 +47,6 @@ class OrderMatchStepResultTest extends FlatSpec with Matchers {
 
     result.remainingIncomingOrder shouldEqual Some(Order("assetA", 99, 15, Sell, "sell-order1", t))
     result.remainingExistingOrder shouldEqual None
-    result.filledOrder shouldEqual Some(new FilledOrder(Order("assetA", 100, 15, Sell, "sell-order1", t), Order("assetA", 100, 15, Buy, "buy-order1", t)))
+    result.filledOrder shouldEqual Some(FilledOrder(sell, buy, 100, 15))
   }
 }
