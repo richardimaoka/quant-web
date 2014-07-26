@@ -2,7 +2,7 @@ package com.quantweb.order
 
 import org.scalatest.{FlatSpec, Matchers}
 import org.joda.time.DateTime
-import scala.collection.SortedSet
+import scala.collection.immutable.SortedSet
 
 /**
  * Created by Richard Imaoka (richard.s.imaoka@gmail.com) on 2014/06/23.
@@ -127,13 +127,18 @@ class OrderMatchAlgorithmStepTest extends FlatSpec with Matchers {
 }
 
 class OrderMatchAlgorithmCycleTest extends FlatSpec with Matchers {
+  /**
+   * Return buy Order, quicker way with fewer parameters
+   */
+  def buy(price: FormattedNumber, quantity: FormattedNumber, orderDigit: Int, time: DateTime = new DateTime()) = Order("assetA", price, quantity, Buy, s"buy-order${orderDigit}", time)
 
-  def buy(price: FormattedNumber, quantity: FormattedNumber, orderID: String) = Order("assetA", price, quantity, Buy, "buy-order" + orderID, new DateTime())
-
-  def sell(price: FormattedNumber, quantity: FormattedNumber, orderID: String) = Order("assetA", price, quantity, Sell, "sell-order" + orderID, new DateTime())
+  /**
+   * Return sell Order, quicker way with fewer parameters
+   */
+  def sell(price: FormattedNumber, quantity: FormattedNumber, orderDigit: Int, time: DateTime = new DateTime()) = Order("assetA", price, quantity, Sell, s"sell-order${orderDigit}", time)
 
   def createQueue(orders: Seq[Order])(implicit ordering: Ordering[Order]): SortedSet[Order] = {
-    var queue = SortedSet[Order]()(OrderMatcher.SortOrderingBuy)
+    var queue = SortedSet[Order]()(ordering)
     orders.foreach(order => queue = queue + order)
     return queue
   }
@@ -142,7 +147,208 @@ class OrderMatchAlgorithmCycleTest extends FlatSpec with Matchers {
 
   def sellQueue(orders: Order*) = createQueue(orders)(OrderMatcher.SortOrderingSell)
 
-  //  "OrderMatchAlgorithm.cycle()" should "match nothing if there is no existing order" in {
-  //    OrderMatchAlgorithm.cycle(buy(99, 10, "1"), sellQueue()) shouldEqual (buy(99, 10, "1"), sellQueue(), List())
-  //  }
+  def filledOrderList(orderPairs: (Order, Order)*) = orderPairs.map(x => FilledOrder(x._1, x._2)).toList
+
+  def fill(order: Order, filledPrice: FormattedNumber, filledQuantity: FormattedNumber) = order.withNewPriceAndQuantity(filledPrice, filledQuantity)
+
+  def test(actual: OrderMatchCycleResult, expected: OrderMatchCycleResult) = {
+    actual.remainingIncomingOrder shouldEqual expected.remainingIncomingOrder
+    actual.remainingExistingOrders shouldEqual expected.remainingExistingOrders
+    actual.filledOrders shouldEqual expected.filledOrders
+    actual.error shouldEqual expected.error
+
+    //in case there are more memebers addded in the future, this is to make sure actual == expected
+    actual shouldEqual expected
+  }
+
+  "OrderMatchAlgorithm.cycle()" should "not match  if there is no existing order" in {
+    val b = buy(99, 10, 1)
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue()), expected = OrderMatchCycleResult(Some(b), sellQueue(), List(), None))
+  }
+
+  /** *******************************************************************
+    * * test cases
+    * *********************************************************************/
+
+  it should "not match if Incoming buy price < Existing 1st sell price" in {
+    val b = buy(99, 10, 1)
+    val s = sell(100, 10, 1)
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s)), expected = OrderMatchCycleResult(Some(b), sellQueue(s), List(), None))
+  }
+
+  it should "match if Incoming buy price = Existing 1st sell price, and Incoming buy quantity < Existing 1st sell quantity" in {
+    val b = buy(100, 5, 1)
+    val s = sell(100, 10, 1)
+    val filledOrders = filledOrderList((b, fill(s, 100, 5)))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s)), expected = OrderMatchCycleResult(None, sellQueue(s.withNewQuantity(5)), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price = Existing 1st sell price, and Incoming buy quantity = Existing 1st sell quantity" in {
+    val b = buy(100, 10, 1)
+    val s = sell(100, 10, 1)
+    val filledOrders = filledOrderList((b, s))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s)), expected = OrderMatchCycleResult(None, sellQueue(), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price = Existing 1st sell price, and Incoming buy quantity > Existing 1st sell quantity" in {
+    val b = buy(100, 20, 1)
+    val s = sell(100, 10, 1)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s)), expected = OrderMatchCycleResult(Some(b.withNewQuantity(10)), sellQueue(), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price = Existing 1st sell price, and Incoming buy quantity < SUM(Existing 1st sell quantity)" in {
+    val b = buy(100, 15, 1)
+    val s1a = sell(100, 10, 1)
+    val s1b = sell(100, 10, 2)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 5), fill(s1b, 100, 5)))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b)), expected = OrderMatchCycleResult(None, sellQueue(s1b.withNewQuantity(5)), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price = Existing 1st sell price, and Incoming buy quantity = SUM(Existing 1st sell quantity)" in {
+    val b = buy(100, 20, 1)
+    val s1a = sell(100, 10, 1)
+    val s1b = sell(100, 10, 2)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b)), expected = OrderMatchCycleResult(None, sellQueue(), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price = Existing 1st sell price, and Incoming buy quantity > SUM(Existing 1st sell quantity)" in {
+    val b = buy(100, 30, 1)
+    val s1a = sell(100, 10, 1)
+    val s1b = sell(100, 10, 2)
+    val s2a = sell(101, 10, 3)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2a)), expected = OrderMatchCycleResult(Some(b.withNewQuantity(10)), sellQueue(s2a), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price > Existing 1st sell price, and Incoming buy quantity < Existing 1st sell quantity" in {
+    val b = buy(101, 5, 1)
+    val s = sell(100, 10, 1)
+    val filledOrders = filledOrderList((fill(b, 100, 5), fill(s, 100, 5)))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s)), expected = OrderMatchCycleResult(None, sellQueue(s.withNewQuantity(5)), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price > Existing 1st sell price, and Incoming buy quantity = Existing 1st sell quantity" in {
+    val b = buy(101, 10, 1)
+    val s = sell(100, 10, 1)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s)), expected = OrderMatchCycleResult(None, sellQueue(), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price > Existing 1st sell price, and Incoming buy quantity > Existing 1st sell quantity" in {
+    val b = buy(101, 20, 1)
+    val s1 = sell(100, 10, 1)
+    val s2 = sell(102, 10, 2)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1, s2)), expected = OrderMatchCycleResult(Some(b.withNewQuantity(10)), sellQueue(s2), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price > Existing 1st sell price, and Incoming buy quantity < SUM(Existing 1st sell quantity)" in {
+    val b = buy(101, 15, 1)
+    val s1a = sell(100, 10, 1)
+    val s1b = sell(100, 10, 2)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 5), fill(s1b, 100, 5)))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b)), expected = OrderMatchCycleResult(None, sellQueue(s1b.withNewQuantity(5)), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price > Existing 1st sell price, and Incoming buy quantity = SUM(Existing 1st sell quantity)" in {
+    val b = buy(101, 20, 1)
+    val s1a = sell(100, 10, 1)
+    val s1b = sell(100, 10, 2)
+    val s2a = sell(101, 10, 3)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2a)), expected = OrderMatchCycleResult(None, sellQueue(s2a), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price > Existing 1st sell price, and Incoming buy quantity > SUM(Existing 1st sell quantity)" in {
+    val b = buy(101, 30, 1)
+    val s1a = sell(100, 10, 1)
+    val s1b = sell(100, 10, 2)
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b))
+    test(actual = OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b)), expected = OrderMatchCycleResult(Some(b.withNewQuantity(10)), sellQueue(), filledOrders, None))
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity < Existing 1st sell quantity" in {
+    val b = buy(101, 5, 1)
+    val (s1a, s2a) = (sell(100, 10, 1), sell(101, 10, 2))
+    val filledOrders = filledOrderList((fill(b, 100, 5), fill(s1a, 100, 5)))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s2a)) shouldEqual OrderMatchCycleResult(None, sellQueue(s1a.withNewQuantity(5), s2a), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity = Existing 1st sell quantity" in {
+    val b = buy(101, 10, 1)
+    val (s1a, s2a) = (sell(100, 10, 1), sell(101, 10, 2))
+    val filledOrders = filledOrderList((fill(b, 100, 10), fill(s1a, 100, 10)))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s2a)) shouldEqual OrderMatchCycleResult(None, sellQueue(s2a), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity > Existing 1st sell quantity" in {
+    val b = buy(101, 20, 1)
+    val (s1a, s2a) = (sell(100, 10, 1), sell(101, 10, 2))
+    val filledOrders = filledOrderList((fill(b, 100, 10), fill(s1a, 100, 10)), (fill(b, 101, 10), s2a))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s2a)) shouldEqual OrderMatchCycleResult(None, sellQueue(), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity < Sum(Existing 1st sell quantity)" in {
+    val b = buy(101, 15, 1)
+    val (s1a, s1b, s2) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 10, 3))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 5), fill(s1b, 100, 5)))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2)) shouldEqual OrderMatchCycleResult(None, sellQueue(s1b.withNewQuantity(5), s2), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity = Sum(Existing 1st sell quantity)" in {
+    val (b, s1a, s1b, s2) = (buy(101, 20, 1), sell(100, 10, 1), sell(100, 10, 2), sell(101, 10, 3))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2)) shouldEqual OrderMatchCycleResult(None, sellQueue(s2), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity > Sum(Existing 1st sell quantity)" in {
+    val b = buy(101, 30, 1)
+    val (s1a, s1b, s2) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 20, 3))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 10), fill(s2, 101, 10)))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2)) shouldEqual OrderMatchCycleResult(None, sellQueue(s2.withNewQuantity(10)), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity < Sum(Existing 1st sell quantity) + Existing 2nd sell qty" in {
+    val b = buy(101, 30, 1)
+    val (s1a, s1b, s2) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 20, 3))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 10), fill(s2, 101, 10)))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2)) shouldEqual OrderMatchCycleResult(None, sellQueue(s2.withNewQuantity(10)), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity = Sum(Existing 1st sell quantity) + Existing 2nd sell qty" in {
+    val b = buy(101, 40, 1)
+    val (s1a, s1b, s2) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 20, 3))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 20), s2))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2)) shouldEqual OrderMatchCycleResult(None, sellQueue(), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity > Sum(Existing 1st sell quantity) + Existing 2nd sell qty" in {
+    val b = buy(101, 50, 1)
+    val (s1a, s1b, s2) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 20, 3))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 20), s2))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2)) shouldEqual OrderMatchCycleResult(Some(b.withNewQuantity(10)), sellQueue(), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity < Sum(Existing 1st sell quantity + Existing 2nd sell qty)" in {
+    val b = buy(101, 30, 1)
+    val (s1a, s1b, s2a, s2b) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 15, 3), sell(101, 10, 4))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 10), fill(s2a, 101, 10)))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2a, s2b)) shouldEqual OrderMatchCycleResult(None, sellQueue(s2a.withNewQuantity(5), s2b), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity = Sum(Existing 1st sell quantity + Existing 2nd sell qty)" in {
+    val b = buy(101, 45, 1)
+    val (s1a, s1b, s2a, s2b) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 15, 3), sell(101, 10, 4))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 15), s2a), (fill(b, 101, 10), s2b))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2a, s2b)) shouldEqual OrderMatchCycleResult(None, sellQueue(), filledOrders, None)
+  }
+
+  it should "match if Incoming buy price = Existing 2nd sell price, and Incoming buy quantity > Sum(Existing 1st sell quantity + Existing 2nd sell qty)" in {
+    val b = buy(101, 50, 1)
+    val (s1a, s1b, s2a, s2b) = (sell(100, 10, 1), sell(100, 10, 2), sell(101, 15, 3), sell(101, 10, 4))
+    val filledOrders = filledOrderList((fill(b, 100, 10), s1a), (fill(b, 100, 10), s1b), (fill(b, 101, 15), s2a), (fill(b, 101, 10), s2b))
+    OrderMatchAlgorithm.cycle(Some(b), sellQueue(s1a, s1b, s2a, s2b)) shouldEqual OrderMatchCycleResult(Some(b.withNewQuantity(5)), sellQueue(), filledOrders, None)
+  }
 }

@@ -36,16 +36,25 @@ object OrderMatchAlgorithm {
         NoFill(incomingOrder, existingOrder)
     }
   }
-//
-//  def cycle(incomingOrder: Order, existingOrders: Set[Order], doneOrders: List[Order] = List[Order](), logMessages: List[String] = List[String]()): OrderMatchCycleResult = {
-//    if (existingOrders.size > 0) {
-//      step(incomingOrder, existingOrders.head) match {
-//        case error: OrderMatchStepError => return OrderMatchCycleResult(incomingOrder, existingOrders, doneOrders, error)
-//        case result: OrderMatchStepSuccess => return OrderMatchCycleResult(result.incomingOrder, existingOrders.tail + result.existingOrder, doneOrders, None)
-//      }
-//    }
-//    else {
-//      return OrderMatchCycleResult(incomingOrder, existingOrders, doneOrders, None)
-//    }
-//  }
+
+  def cycle(incomingOrderOption: Option[Order], existingOrders: Set[Order], filledOrders: List[FilledOrder] = List[FilledOrder]()): OrderMatchCycleResult = {
+    incomingOrderOption match {
+      case None =>
+        return OrderMatchCycleResult(None, existingOrders, filledOrders, None)
+      case Some(incomingOrder) => {
+        if (existingOrders.size <= 0)
+          return OrderMatchCycleResult(Some(incomingOrder), existingOrders, filledOrders, None)
+        else {
+          step(incomingOrder, existingOrders.head) match {
+            case error: OrderMatchStepError =>
+              return OrderMatchCycleResult(Some(incomingOrder), existingOrders, filledOrders, Some(error))
+            case result: NoFill =>
+              return OrderMatchCycleResult(Some(incomingOrder), existingOrders, filledOrders, None)
+            case result: OrderMatchStepResult =>
+              return cycle(result.remainingIncomingOrder, existingOrders.tail ++ result.remainingExistingOrder, filledOrders ++ result.filledOrder)
+          }
+        }
+      }
+    }
+  }
 }
